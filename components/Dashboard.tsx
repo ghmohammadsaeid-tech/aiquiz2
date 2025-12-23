@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { View, Question, Flashcard, UserStats, Language } from '../types';
 import { AD_CONFIG } from '../constants';
 
@@ -26,6 +26,7 @@ const MOTIVATIONAL_QUOTES = [
   "ذهن تو مثل ماهیچه است؛ با چالش‌های جدید قوی‌تر می‌شه. 💪"
 ];
 
+// Added React import above to fix "Cannot find namespace 'React'" error on line 29
 const Dashboard: React.FC<Props> = ({ questions, flashcards, setView, dueCards, userStats, t, isPremium, lang }) => {
   const masteryScore = useMemo(() => {
     if (flashcards.length === 0) return 0;

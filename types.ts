@@ -1,4 +1,3 @@
-
 export type Difficulty = 'آسان' | 'متوسط' | 'سخت';
 
 export interface Question {
@@ -50,7 +49,7 @@ export interface UserStats {
 }
 
 export type View = 'dashboard' | 'exam' | 'flashcards' | 'bank' | 'ai' | 'settings' | 'stats';
-export type Language = 'fa' | 'en';
+export type Language = 'fa' | 'en' | 'ku' | 'ar';
 
 export interface ExamState {
   active: boolean;
