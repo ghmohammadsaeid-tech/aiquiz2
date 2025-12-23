@@ -8,52 +8,45 @@ const LANG_NAMES: Record<Language, string> = {
   ar: "Arabic"
 };
 
-export const generateQuestions = async (topic: string, count: number, difficulty: string, lang: Language): Promise<Question[]> => {
-  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const model = 'gemini-3-flash-preview';
+export const generateQuestions = async (topic: string, count: number, difficulty: string, lang: Language, engineLogic: string): Promise<Question[]> => {
+  // ایجاد نمونه جدید در هر بار فراخوانی برای اطمینان از تازگی کلید (مطابق قوانین)
+  const ai = new GoogleGenAI({ apiKey: process.env.API_KEY || "" });
+  const modelName = 'gemini-3-flash-preview';
 
-  const prompt = `Generate exactly ${count} multiple-choice questions in ${LANG_NAMES[lang]} about "${topic}" with "${difficulty}" difficulty level.
-  Each question must be a JSON object with:
-  - q: Question text
+  const prompt = `Act as an expert exam designer using the logic and precision of "${engineLogic}".
+  Generate exactly ${count} multiple-choice questions in ${LANG_NAMES[lang]} about "${topic}" with "${difficulty}" difficulty level.
+  
+  Output MUST be a raw JSON array of objects with these keys:
+  - q: The question string
   - o: Array of 4 options
-  - a: Correct answer index (0-3)
-  - c: Category
+  - a: Index of correct answer (0-3)
+  - c: Category name
   - difficulty: "${difficulty}"
   
-  IMPORTANT: The content must be entirely in ${LANG_NAMES[lang]}. Return ONLY a valid JSON array.`;
+  IMPORTANT: Return ONLY the JSON array. Do not use any markdown tags, commentary, or backticks. Start with [ and end with ].`;
 
   try {
     const response = await ai.models.generateContent({
-      model,
+      model: modelName,
       contents: prompt,
       config: {
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.ARRAY,
-          items: {
-            type: Type.OBJECT,
-            properties: {
-              q: { type: Type.STRING },
-              o: { type: Type.ARRAY, items: { type: Type.STRING } },
-              a: { type: Type.INTEGER },
-              c: { type: Type.STRING },
-              difficulty: { type: Type.STRING }
-            },
-            required: ["q", "o", "a", "c", "difficulty"]
-          }
-        }
+        temperature: 0.8,
+        topP: 0.9,
       }
     });
 
-    let text = response.text || "";
-    if (!text) {
-        text = response.candidates?.[0]?.content?.parts?.[0]?.text || "[]";
-    }
+    const text = response.text || "";
     
-    const jsonStr = text.replace(/```json/g, '').replace(/```/g, '').trim();
-    return JSON.parse(jsonStr);
+    // استخراج امن JSON با ریجکس برای جلوگیری از خطای متون اضافی در موبایل
+    const jsonMatch = text.match(/\[[\s\S]*\]/);
+    const cleanJson = jsonMatch ? jsonMatch[0] : text.trim();
+    
+    const parsed = JSON.parse(cleanJson);
+    if (!Array.isArray(parsed)) throw new Error("Format is not an array");
+    
+    return parsed;
   } catch (error) {
-    console.error("Gemini API Error:", error);
-    throw error;
+    console.error("API Call failed:", error);
+    throw new Error("خطا در دریافت پاسخ. لطفاً مجدداً تلاش کنید یا از روش دستی استفاده کنید.");
   }
 };
