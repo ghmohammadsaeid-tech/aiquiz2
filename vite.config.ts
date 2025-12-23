@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
+  base: './', // بسیار مهم برای Codeberg و هاست‌های استاتیک
   define: {
     'process.env.API_KEY': JSON.stringify(process.env.API_KEY || '')
   },
@@ -18,9 +19,5 @@ export default defineConfig({
         }
       }
     }
-  },
-  server: {
-    port: 3000,
-    host: true
   }
 });
