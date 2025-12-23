@@ -1,0 +1,9 @@
+{
+  "name": "تک فایله  آزمون‌یار هوشمند ",
+  "description": "A comprehensive learning platform featuring AI-powered question generation, SM-2 Spaced Repetition, and gamified progress tracking.",
+  "requestFramePermissions": [],
+  "short_name": "آزمون‌یار",
+  "theme_color": "#4f46e5",
+  "background_color": "#f8fafc",
+  "display": "standalone"
+}

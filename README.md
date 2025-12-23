@@ -1,11 +1,19 @@
-<div align="center">
+# راهنمای نهایی دیپلوی در Cloudflare Pages
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+برای اینکه برنامه بدون هیچ مشکلی اجرا شود، مراحل زیر را در پنل Cloudflare دنبال کنید:
 
-  <h1>Built with AI Studio</h2>
+## ۱. تنظیمات Build
+- **Framework Preset**: `Vite`
+- **Build Command**: `npm run build`
+- **Build Output Directory**: `dist`
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## ۲. متغیرهای محیطی (بسیار مهم)
+به مسیر **Settings > Variables and Secrets** بروید و متغیر زیر را اضافه کنید:
+- **Variable Name**: `API_KEY`
+- **Value**: `کلید_ای_پی_ای_گوگل_شما`
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
+## ۳. فایل _redirects
+فایل `_redirects` در ریشه پروژه قرار داده شده است. این فایل به کلودفلر می‌گوید که تمام مسیرها را به `index.html` بفرستد تا سیستم `setView` داخلی شما به درستی کار کند و کاربر با خطای ۴۰۴ سرور روبرو نشود.
 
-</div>
+## ۴. نکته امنیتی
+از آنجایی که ما از `vite.config.ts` برای تزریق کلید استفاده می‌کنیم، در هنگام بیلد، کلید شما در کد نهایی قرار می‌گیرد. این برای اپلیکیشن‌های کلاینت-ساید معمولی است، اما پیشنهاد می‌شود محدودیت‌های IP یا ارجاع‌دهنده (Referrer) را در پنل Google Cloud روی کلید خود اعمال کنید.
