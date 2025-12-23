@@ -53,22 +53,25 @@ Engine Logic: ${selectedEngine}`;
       const end = manualJson.lastIndexOf(']');
       const jsonStr = start !== -1 && end !== -1 ? manualJson.substring(start, end + 1) : manualJson;
       const parsed = JSON.parse(jsonStr);
-      if (Array.isArray(parsed)) setPreview(parsed);
+      if (Array.isArray(parsed)) {
+          setPreview(parsed);
+          alert('سوالات با موفقیت تحلیل شدند. پیش‌نمایش را در پایین صفحه ببینید.');
+      }
     } catch (e) {
-      alert('خطا در خواندن JSON.');
+      alert('خطا در تحلیل متن. مطمئن شوید تمام کد JSON را کپی کرده‌اید.');
     }
   };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 pb-24 animate-fade-in text-right">
       <div className="flex justify-between items-center flex-row-reverse">
-          <button onClick={() => setView('dashboard')} className="px-4 py-2 bg-white dark:bg-slate-800 text-slate-500 rounded-xl text-xs font-black shadow-sm">
-             بازگشت <i className="fa-solid fa-arrow-left mr-2"></i>
+          <button onClick={() => setView('dashboard')} className="px-4 py-2 bg-white dark:bg-slate-800 text-slate-500 rounded-xl text-xs font-black shadow-sm border dark:border-slate-700">
+             بازگشت <i className="fa-solid fa-arrow-left mr-2 text-[10px]"></i>
           </button>
       </div>
 
       <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-sm border-2 dark:border-slate-700">
-        <label className="text-[10px] font-black text-slate-400 block mb-4 uppercase tracking-widest text-center">انتخاب موتور طراحی (AI Engine)</label>
+        <label className="text-[10px] font-black text-slate-400 block mb-4 uppercase tracking-widest text-center">انتخاب موتور طراحی (AI Engine Logic)</label>
         <div className="grid grid-cols-3 gap-3">
           {ENGINES.map(e => (
             <button 
@@ -83,11 +86,12 @@ Engine Logic: ${selectedEngine}`;
         </div>
       </div>
 
-      <div className={`rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden ${isPremium ? 'bg-slate-900' : 'bg-indigo-600'}`}>
+      <div className={`rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden transition-all duration-500 ${isPremium ? 'bg-slate-900 border border-amber-500/30' : 'bg-indigo-600'}`}>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="text-center md:text-right">
-            <h2 className="text-2xl font-black mb-1">طراح هوشمند {selectedEngine} 🤖</h2>
-            <p className="text-xs opacity-70">طراحی با شبیه‌ساز منطق {selectedEngine}</p>
+            <h2 className="text-2xl font-black mb-1">طراح هوشمند {selectedEngine} {isPremium && '✨'}</h2>
+            <p className="text-xs opacity-70">طراحی سوال با شبیه‌ساز منطق عصبی {selectedEngine}</p>
           </div>
           <div className="flex bg-black/20 backdrop-blur-xl p-1.5 rounded-2xl border border-white/10 w-full md:w-auto">
             <button onClick={() => setMethod('manual')} className={`flex-1 md:px-6 py-2.5 rounded-xl font-bold text-xs ${method === 'manual' ? 'bg-white text-indigo-600 shadow-xl' : 'text-white'}`}>روش دستی</button>
@@ -98,25 +102,35 @@ Engine Logic: ${selectedEngine}`;
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
-          <div className="dark:bg-slate-800 bg-white p-6 rounded-[2rem] border-2 dark:border-slate-700 shadow-sm space-y-5">
-            <h3 className="font-black text-sm dark:text-white border-b-2 dark:border-slate-700 pb-3">تنظیمات طراحی</h3>
+          <div className="dark:bg-slate-800 bg-white p-6 rounded-[2rem] border-2 dark:border-slate-700 shadow-sm space-y-6">
+            <h3 className="font-black text-sm dark:text-white border-b-2 dark:border-slate-700 pb-3 uppercase tracking-tighter">Blueprint</h3>
             <div>
               <label className="text-[10px] font-black text-slate-400 block mb-2">موضوع آزمون</label>
-              <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="مثلاً: زبان، ریاضی..." className="w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none font-bold text-slate-900 dark:text-white" />
+              <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="مثلاً: فیزیک، زبان..." className="w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none font-bold text-slate-900 dark:text-white focus:border-indigo-500" />
             </div>
-            <div className="grid grid-cols-1 gap-4">
-              <div>
+            <div>
                 <label className="text-[10px] font-black text-slate-400 block mb-2">تعداد سوالات</label>
-                <select value={count} onChange={(e) => setCount(parseInt(e.target.value))} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl font-black text-slate-900 dark:text-white">
+                <select value={count} onChange={(e) => setCount(parseInt(e.target.value))} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl font-black text-slate-900 dark:text-white outline-none">
                   <option value={5}>۵ سوال</option>
                   <option value={10}>۱۰ سوال</option>
                   <option value={20}>۲۰ سوال</option>
-                  <option value={50} disabled={!isPremium} className={!isPremium ? 'text-slate-300' : 'text-amber-500 font-black'}>۵۰ سوال {!isPremium ? '(طلایی)' : '✨'}</option>
-                  <option value={100} disabled={!isPremium} className={!isPremium ? 'text-slate-300' : 'text-amber-500 font-black'}>۱۰۰ سوال {!isPremium ? '(طلایی)' : '✨'}</option>
+                  <option value={50} disabled={!isPremium} className={!isPremium ? 'text-slate-300' : 'text-amber-500 font-black'}>
+                    {isPremium ? '👑 ۵۰ سوال (طلایی)' : '🔒 ۵۰ سوال (VIP)'}
+                  </option>
+                  <option value={100} disabled={!isPremium} className={!isPremium ? 'text-slate-300' : 'text-amber-500 font-black'}>
+                    {isPremium ? '👑 ۱۰۰ سوال (طلایی)' : '🔒 ۱۰۰ سوال (VIP)'}
+                  </option>
                 </select>
-              </div>
+                {!isPremium && <p className="text-[9px] text-amber-600 mt-2 font-black text-center">ارتقا به طلایی برای تولید ۱۰۰ سوال</p>}
             </div>
-            {!isPremium && <button onClick={() => setView('settings')} className="w-full py-3 bg-amber-500 text-white rounded-xl text-[10px] font-black">فعال‌سازی ۱۰۰ سوال (VIP)</button>}
+            <div>
+                <label className="text-[10px] font-black text-slate-400 block mb-2">دشواری</label>
+                <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="w-full p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl font-black text-slate-900 dark:text-white outline-none">
+                  <option value="آسان">آسان</option>
+                  <option value="متوسط">متوسط</option>
+                  <option value="سخت">سخت</option>
+                </select>
+            </div>
           </div>
         </div>
 
@@ -128,25 +142,25 @@ Engine Logic: ${selectedEngine}`;
                   {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-bolt-lightning"></i>}
                 </div>
                 <h3 className="text-xl font-black dark:text-white">تولید هوشمند با {selectedEngine}</h3>
-                <p className="text-slate-500 text-xs mt-3">با کلیک روی دکمه زیر، سوالات مستقیماً در بانک ذخیره می‌شوند.</p>
+                <p className="text-slate-500 text-xs mt-3 px-6 leading-relaxed">جمی‌نای با شبیه‌سازی منطق استنتاجی موتور {selectedEngine}، دقیق‌ترین سوالات را برای شما طراحی می‌کند.</p>
               </div>
-              <button onClick={handleDirectGenerate} disabled={loading} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg disabled:opacity-50">
-                {loading ? 'در حال طراحی سوالات...' : 'شروع طراحی خودکار'}
+              <button onClick={handleDirectGenerate} disabled={loading} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black text-lg disabled:opacity-50 shadow-xl transition-all active:scale-95">
+                {loading ? 'در حال پردازش عصبی...' : 'شروع طراحی خودکار'}
               </button>
             </div>
           ) : (
             <div className="dark:bg-slate-800 bg-white p-6 rounded-[2rem] border-2 dark:border-slate-700 shadow-sm space-y-6">
               <div>
-                <label className="text-[10px] font-black text-slate-400 block mb-3">کپی پرامپت برای {selectedEngine}:</label>
+                <label className="text-[10px] font-black text-slate-400 block mb-3 uppercase tracking-tighter">۱. کپی پرامپت حرفه‌ای برای {selectedEngine}:</label>
                 <div className="relative group">
                   <textarea readOnly value={editablePrompt} className="w-full h-28 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border-2 border-slate-100 dark:border-slate-700 text-[10px] font-mono text-slate-400 resize-none outline-none" />
-                  <button onClick={() => { navigator.clipboard.writeText(editablePrompt); alert('کپی شد!'); }} className="absolute bottom-4 left-4 p-2 bg-indigo-600 text-white rounded-lg text-[10px] font-bold">کپی متن</button>
+                  <button onClick={() => { navigator.clipboard.writeText(editablePrompt); alert('پرامپت کپی شد!'); }} className="absolute bottom-4 left-4 p-2 bg-indigo-600 text-white rounded-lg text-[10px] font-bold shadow-lg">کپی متن</button>
                 </div>
               </div>
               <div className="pt-4 border-t-2 dark:border-slate-700">
-                <label className="text-[10px] font-black text-slate-400 block mb-3 uppercase">چسباندن پاسخ AI:</label>
-                <textarea value={manualJson} onChange={(e) => setManualJson(e.target.value)} placeholder="Paste response here..." className="w-full h-28 p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none text-xs font-mono text-slate-900 dark:text-white" />
-                <button onClick={handleManualProcess} className="w-full mt-4 py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all">تحلیل و افزودن سوالات</button>
+                <label className="text-[10px] font-black text-slate-400 block mb-3 uppercase tracking-tighter">۲. پاسخ موتور هوشمند را اینجا بچسبانید:</label>
+                <textarea value={manualJson} onChange={(e) => setManualJson(e.target.value)} placeholder="Paste response JSON here..." className="w-full h-28 p-4 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none text-xs font-mono text-slate-900 dark:text-white" />
+                <button onClick={handleManualProcess} className="w-full mt-4 py-4 bg-emerald-600 text-white rounded-2xl font-black text-sm shadow-lg active:scale-95 transition-all">تحلیل و وارد کردن سوالات</button>
               </div>
             </div>
           )}
@@ -156,15 +170,16 @@ Engine Logic: ${selectedEngine}`;
       {preview.length > 0 && (
         <div className="animate-slide-up space-y-4">
           <div className="flex flex-col md:flex-row justify-between items-center bg-emerald-50 dark:bg-emerald-900/20 p-6 rounded-[2rem] border-2 border-emerald-100 dark:border-emerald-800 gap-4">
-            <span className="text-emerald-700 dark:text-emerald-400 font-black text-sm">{preview.length} سوال آماده اضافه شدن است</span>
+            <span className="text-emerald-700 dark:text-emerald-400 font-black text-sm">{preview.length} سوال با موفقیت طراحی شد</span>
             <div className="flex gap-2 w-full md:w-auto">
               <button onClick={() => setPreview([])} className="flex-1 px-4 py-3 bg-white dark:bg-slate-800 text-slate-500 rounded-xl text-xs font-bold">لغو</button>
               <button onClick={() => {
                 const formatted = preview.map(q => ({ ...q, id: Date.now() + Math.random(), dateAdded: new Date().toISOString() }));
                 setQuestions(prev => [...prev, ...formatted as any]);
                 setPreview([]);
-                alert('با موفقیت به بانک سوالات اضافه شد.');
-              }} className="flex-[2] px-6 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black shadow-lg">تایید و ذخیره نهایی</button>
+                alert('سوالات به بانک اضافه شدند.');
+                setView('bank');
+              }} className="flex-[2] px-6 py-3 bg-emerald-600 text-white rounded-xl text-xs font-black shadow-lg">تایید و ذخیره در بانک سوالات</button>
             </div>
           </div>
         </div>
