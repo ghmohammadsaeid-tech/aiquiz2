@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { View, Question, Flashcard, Language, UserStats } from './types';
 import { TRANSLATIONS } from './constants';
@@ -64,7 +65,6 @@ const App: React.FC = () => {
       document.body.classList.remove('dark', 'bg-slate-900', 'text-slate-100');
     }
 
-    // PWA Install Logic
     const handleBeforeInstallPrompt = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -122,7 +122,7 @@ const App: React.FC = () => {
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? 'dark bg-slate-900 text-slate-100' : 'bg-slate-50 text-slate-900'}`}>
       {showInstallBanner && (
-        <div className="fixed bottom-20 left-4 right-4 z-[100] bg-indigo-600 text-white p-6 rounded-[2rem] shadow-2xl animate-slide-up flex flex-col md:flex-row items-center justify-between gap-4 border-2 border-white/20">
+        <div className="fixed bottom-24 left-4 right-4 z-[100] bg-indigo-600 text-white p-6 rounded-[2rem] shadow-2xl animate-slide-up flex flex-col md:flex-row items-center justify-between gap-4 border-2 border-white/20">
           <div className="flex items-center gap-4 flex-row-reverse text-right">
             <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center text-xl"><i className="fa-solid fa-mobile-screen-button"></i></div>
             <div>
@@ -139,30 +139,62 @@ const App: React.FC = () => {
 
       <nav className={`shadow-sm sticky top-0 z-50 border-b backdrop-blur-md ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-white/80 border-slate-100'}`}>
         <div className="container mx-auto px-4 max-w-6xl">
-          <div className="flex justify-between items-center h-16">
+          <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('dashboard')}>
-              <div className={`w-10 h-10 rounded-2xl flex items-center justify-center shadow-lg ${isPremium ? 'bg-amber-500' : 'bg-indigo-600'}`}>
-                <i className={`fa-solid ${isPremium ? 'fa-crown' : 'fa-graduation-cap'} text-white`}></i>
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-lg transition-transform hover:rotate-6 ${isPremium ? 'bg-gradient-to-br from-amber-400 to-orange-600' : 'bg-gradient-to-br from-indigo-500 to-purple-700'}`}>
+                <i className={`fa-solid ${isPremium ? 'fa-crown' : 'fa-graduation-cap'} text-white text-xl`}></i>
               </div>
-              <span className="text-lg font-black dark:text-white">آزمون‌یار</span>
+              <div className="flex flex-col text-right">
+                <span className="text-lg font-black dark:text-white leading-tight">آزمون‌یار</span>
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-tighter">Smart Assistant</span>
+              </div>
             </div>
             
-            <div className="flex items-center gap-2">
-                <div className="flex items-center gap-2 px-3 py-1.5 rounded-full border dark:bg-slate-700 dark:border-slate-600 text-amber-500">
-                    <i className="fa-solid fa-fire"></i>
-                    <span className="text-xs font-black">{userStats.streak}</span>
+            <div className="flex items-center gap-3">
+                <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-2xl border dark:bg-slate-700 dark:border-slate-600 text-amber-500 shadow-sm">
+                    <i className="fa-solid fa-fire text-lg"></i>
+                    <span className="text-sm font-black">{userStats.streak}</span>
                 </div>
-                <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden w-10 h-10 rounded-2xl flex items-center justify-center dark:text-white">
+                {/* Burger Menu Button with Enhanced Contrast */}
+                <button 
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl transition-all active:scale-90 border-2 ${
+                    mobileMenuOpen 
+                    ? 'bg-rose-500 border-rose-400 text-white' 
+                    : darkMode 
+                      ? 'bg-amber-500 border-amber-400 text-slate-900 shadow-amber-900/40' 
+                      : 'bg-indigo-600 border-indigo-500 text-white shadow-indigo-200'
+                  }`}
+                >
                   <i className={`fa-solid ${mobileMenuOpen ? 'fa-xmark' : 'fa-bars'} text-xl`}></i>
                 </button>
             </div>
           </div>
         </div>
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t py-4 px-4 space-y-1 dark:bg-slate-800 dark:border-slate-700">
+          <div className="border-t py-6 px-4 space-y-2 dark:bg-slate-800 dark:border-slate-700 animate-slide-down shadow-2xl">
             {['dashboard', 'flashcards', 'exam', 'bank', 'ai', 'stats', 'settings'].map(v => (
-              <button key={v} onClick={() => { setView(v as View); setMobileMenuOpen(false); }} className={`w-full text-right px-4 py-3 rounded-xl font-bold text-sm ${view === v ? 'bg-indigo-50 text-indigo-600 dark:bg-slate-700 dark:text-white' : 'text-slate-500'}`}>
-                {t(`nav.${v}`)}
+              <button 
+                key={v} 
+                onClick={() => { setView(v as View); setMobileMenuOpen(false); }} 
+                className={`w-full text-right px-6 py-4 rounded-2xl font-black text-sm flex items-center justify-between flex-row-reverse transition-all ${
+                  view === v 
+                  ? 'bg-indigo-600 text-white shadow-lg' 
+                  : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'
+                }`}
+              >
+                <div className="flex items-center gap-3 flex-row-reverse">
+                    <i className={`fa-solid ${
+                      v === 'dashboard' ? 'fa-house' : 
+                      v === 'flashcards' ? 'fa-layer-group' : 
+                      v === 'exam' ? 'fa-stopwatch' : 
+                      v === 'bank' ? 'fa-book-bookmark' : 
+                      v === 'ai' ? 'fa-wand-magic-sparkles' : 
+                      v === 'stats' ? 'fa-chart-pie' : 'fa-gear'
+                    }`}></i>
+                    {t(`nav.${v}`)}
+                </div>
+                {view === v && <div className="w-1.5 h-1.5 bg-white rounded-full"></div>}
               </button>
             ))}
           </div>
