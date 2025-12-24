@@ -71,7 +71,6 @@ const App: React.FC = () => {
     localStorage.setItem('isPremium', String(isPremium));
     localStorage.setItem('darkMode', String(darkMode));
     
-    // مدیریت هوشمند جهت و زبان سند
     document.documentElement.dir = (lang === 'en') ? 'ltr' : 'rtl';
     document.documentElement.lang = lang;
     
@@ -126,35 +125,35 @@ const App: React.FC = () => {
 
   return (
     <div className={`min-h-screen flex flex-col transition-colors duration-300 ${darkMode ? 'dark bg-slate-900' : 'bg-slate-50'}`}>
-      <nav className={`shadow-sm sticky top-0 z-50 border-b backdrop-blur-md ${darkMode ? 'bg-slate-800/80 border-slate-700' : 'bg-white/80 border-slate-100'}`}>
+      <nav className={`sticky top-0 z-50 border-b-[6px] ${darkMode ? 'bg-slate-800 border-white' : 'bg-white border-slate-900'}`}>
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="flex justify-between items-center h-20">
             <div className="flex items-center gap-3 cursor-pointer" onClick={() => setView('dashboard')}>
-              <div className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center shadow-lg ${isPremium ? 'bg-amber-500' : 'bg-indigo-600'}`}>
-                <i className={`fa-solid ${isPremium ? 'fa-crown' : 'fa-graduation-cap'} text-white text-lg`}></i>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center border-[3px] border-black ${isPremium ? 'bg-amber-400' : 'bg-indigo-600'}`}>
+                <i className={`fa-solid ${isPremium ? 'fa-crown' : 'fa-graduation-cap'} text-white text-xl`}></i>
               </div>
               <div className="flex flex-col">
-                <span className="text-base md:text-lg font-black dark:text-white leading-tight">آزمون‌یار</span>
-                <span className="text-[8px] md:text-[9px] font-black text-slate-400 uppercase">Smart Assistant</span>
+                <span className="text-xl font-black dark:text-white leading-tight">آزمون‌یار</span>
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-tighter">Smart AI Assistant</span>
               </div>
             </div>
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className={`w-10 h-10 md:w-12 md:h-12 rounded-2xl flex items-center justify-center border-2 transition-all ${darkMode ? 'bg-slate-700 border-slate-600 text-white' : 'bg-slate-100 border-white text-slate-600'}`}>
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className={`w-12 h-12 rounded-xl flex items-center justify-center border-[3px] transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)] ${darkMode ? 'bg-slate-700 border-white text-white' : 'bg-slate-100 border-slate-900 text-slate-600'}`}>
               <i className={`fa-solid ${mobileMenuOpen ? 'fa-xmark' : 'fa-bars'}`}></i>
             </button>
           </div>
         </div>
         {mobileMenuOpen && (
-          <div className="border-t py-4 px-4 space-y-1 dark:bg-slate-800 animate-slide-down shadow-xl">
+          <div className="border-t-[6px] border-slate-900 dark:border-white py-4 px-4 space-y-2 dark:bg-slate-800 animate-slide-down">
             {['dashboard', 'flashcards', 'exam', 'bank', 'ai', 'stats', 'settings'].map(v => (
-              <button key={v} onClick={() => { setView(v as View); setMobileMenuOpen(false); }} className={`w-full text-right px-6 py-4 rounded-xl font-black text-sm flex items-center gap-4 ${view === v ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-700'}`}>
-                <i className={`fa-solid ${v === 'dashboard' ? 'fa-house' : v === 'flashcards' ? 'fa-layer-group' : v === 'exam' ? 'fa-stopwatch' : v === 'bank' ? 'fa-book-bookmark' : v === 'ai' ? 'fa-wand-magic-sparkles' : v === 'stats' ? 'fa-chart-pie' : 'fa-gear'} w-6`}></i>
+              <button key={v} onClick={() => { setView(v as View); setMobileMenuOpen(false); }} className={`w-full text-right px-6 py-4 rounded-xl font-black text-sm flex items-center gap-4 border-[3px] ${view === v ? 'bg-indigo-600 text-white border-black dark:border-white shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]' : 'bg-white dark:bg-slate-900 text-slate-500 border-slate-200 dark:border-slate-700'}`}>
+                <i className={`fa-solid ${v === 'dashboard' ? 'fa-house' : v === 'flashcards' ? 'fa-brain' : v === 'exam' ? 'fa-stopwatch' : v === 'bank' ? 'fa-book-bookmark' : v === 'ai' ? 'fa-wand-magic-sparkles' : v === 'stats' ? 'fa-chart-pie' : 'fa-gear'} w-6`}></i>
                 {t(`nav.${v}`)}
               </button>
             ))}
           </div>
         )}
       </nav>
-      <main className="flex-1 container mx-auto px-2 md:px-4 py-6 max-w-6xl">{renderContent()}</main>
+      <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">{renderContent()}</main>
     </div>
   );
 };

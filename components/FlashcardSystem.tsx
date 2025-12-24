@@ -54,25 +54,20 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
   if (showFinishedAd) {
       return (
           <div className="max-w-2xl mx-auto space-y-6 animate-slide-up">
-              <div className="bg-white dark:bg-slate-800 p-10 rounded-[3rem] shadow-2xl text-center">
-                  <div className="w-20 h-20 bg-emerald-50 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-500 text-4xl"><i className="fa-solid fa-check-double"></i></div>
+              <div className="bg-white dark:bg-slate-800 p-10 rounded-[3rem] border-[4px] border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] text-center">
+                  <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 text-4xl border-2 border-black"><i className="fa-solid fa-check-double"></i></div>
                   <h2 className="text-3xl font-black mb-4 dark:text-white">آفرین! خسته نباشی 🎉</h2>
-                  <p className="text-slate-500 mb-8">تمامی کارت‌های امروز بررسی شدند.</p>
-
+                  <p className="text-slate-500 mb-8 font-bold">تمامی کارت‌های امروز بررسی شدند.</p>
                   {!isPremium && (
-                    <div className="mb-8 p-6 bg-amber-50 dark:bg-amber-900/10 border-2 border-amber-100 dark:border-amber-900/30 rounded-3xl text-right flex flex-col items-center gap-3">
-                        <h4 className="text-sm font-black text-amber-700 dark:text-amber-400 flex items-center gap-2 flex-row-reverse">
-                          <i className="fa-solid fa-graduation-cap"></i>
-                          {dynamicAd.title}
-                        </h4>
-                        <p className="text-[11px] text-amber-600 dark:text-amber-500 mt-1 font-bold text-center">{dynamicAd.desc}</p>
-                        <button onClick={() => dynamicAd.url !== "#" ? window.open(dynamicAd.url, '_blank') : setView('settings')} className="w-full py-2 bg-amber-500 text-white rounded-xl text-xs font-black shadow-lg">
+                    <div className="mb-8 p-6 bg-amber-400 border-[4px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] text-right flex flex-col items-center gap-3">
+                        <h4 className="text-sm font-black text-black flex items-center gap-2 flex-row-reverse"><i className="fa-solid fa-crown"></i> {dynamicAd.title}</h4>
+                        <p className="text-[11px] text-black/80 font-bold text-center">{dynamicAd.desc}</p>
+                        <button onClick={() => dynamicAd.url !== "#" ? window.open(dynamicAd.url, '_blank') : setView('settings')} className="w-full py-3 bg-black text-white rounded-xl text-xs font-black">
                           {dynamicAd.btn}
                         </button>
                     </div>
                   )}
-
-                  <button onClick={() => setView('dashboard')} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black shadow-xl">بازگشت به داشبورد</button>
+                  <button onClick={() => setView('dashboard')} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">بازگشت به داشبورد</button>
               </div>
           </div>
       );
@@ -82,33 +77,43 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
     const card = sessionCards[currentIdx];
     return (
       <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
-        <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-3xl shadow-sm">
-            <span className="text-xs font-black dark:text-white">سوال {currentIdx + 1} از {sessionCards.length}</span>
-            <button onClick={() => setLearningMode(false)} className="px-4 py-1.5 bg-rose-50 text-rose-500 rounded-lg font-black text-[10px]">توقف جلسه</button>
+        <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-3xl border-[3px] border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
+            <span className="text-xs font-black dark:text-white uppercase tracking-tighter">کارت {currentIdx + 1} از {sessionCards.length}</span>
+            <button onClick={() => setLearningMode(false)} className="px-5 py-2 bg-rose-500 text-white rounded-xl font-black text-[10px] border-2 border-black">توقف</button>
         </div>
         <div className={`flashcard ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(!flipped)}>
             <div className="flashcard-inner">
-                <div className="flashcard-front">
-                    <div className="text-2xl font-black text-center leading-relaxed px-8">{card.type === 'cloze' ? card.front.replace(/\[(.*?)\]/g, '[...]') : card.front}</div>
-                    <div className="mt-8 text-[10px] opacity-60 uppercase font-black">برای مشاهده پاسخ کلیک کنید</div>
+                <div className="flashcard-front bg-indigo-600 border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="text-2xl md:text-3xl font-black text-center text-white leading-relaxed px-8">{card.type === 'cloze' ? card.front.replace(/\[(.*?)\]/g, '[...]') : card.front}</div>
+                    <div className="mt-12 text-[10px] bg-white/20 px-4 py-2 rounded-full text-white font-black uppercase tracking-widest animate-pulse">لمس برای مشاهده پاسخ</div>
                 </div>
-                <div className="flashcard-back">
-                    <div className="flex flex-col items-center justify-center h-full space-y-4">
-                      <div className="text-xl font-bold text-center px-8 leading-relaxed">
-                        {card.type === 'cloze' ? <div dangerouslySetInnerHTML={{ __html: card.front.replace(/\[(.*?)\]/g, '<span class="bg-indigo-100 text-indigo-700 px-1 rounded font-black">$1</span>') }} /> : card.back}
+                <div className="flashcard-back bg-white dark:bg-slate-800 border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="flex flex-col items-center justify-center h-full space-y-6">
+                      <div className="text-xl md:text-2xl font-black text-center px-8 leading-relaxed dark:text-white">
+                        {card.type === 'cloze' ? <div dangerouslySetInnerHTML={{ __html: card.front.replace(/\[(.*?)\]/g, '<span class="bg-indigo-600 text-white px-2 rounded-lg font-black">$1</span>') }} /> : card.back}
                       </div>
-                      {card.example && <p className="text-xs text-slate-400 mt-4 px-6 text-center italic leading-relaxed">{card.example}</p>}
+                      {card.example && (
+                        <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded-2xl border-2 border-black max-w-[80%]">
+                            <p className="text-[11px] text-slate-500 font-bold text-center italic leading-relaxed">{card.example}</p>
+                        </div>
+                      )}
                     </div>
                 </div>
             </div>
         </div>
         {flipped && (
-            <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-xl animate-slide-up space-y-4">
-                <p className="text-center text-[10px] font-black text-slate-400 uppercase">چقدر خوب به یاد آوردید؟</p>
-                <div className="grid grid-cols-6 gap-2">
-                    {[0, 1, 2, 3, 4, 5].map(q => <button key={q} onClick={(e) => { e.stopPropagation(); handleSM2Rating(q); }} className="bg-indigo-600 text-white p-4 rounded-2xl font-black shadow-lg">{q}</button>)}
+            <div className="bg-white dark:bg-slate-800 p-8 rounded-[3rem] border-[4px] border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] animate-slide-up space-y-6">
+                <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">میزان تسلط خود را ارزیابی کنید</p>
+                <div className="grid grid-cols-6 gap-3">
+                    {[0, 1, 2, 3, 4, 5].map(q => (
+                        <button key={q} onClick={(e) => { e.stopPropagation(); handleSM2Rating(q); }} 
+                            className={`p-4 rounded-2xl font-black text-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all 
+                            ${q <= 1 ? 'bg-rose-400' : q <= 3 ? 'bg-amber-400' : 'bg-emerald-400'}`}>
+                            {q}
+                        </button>
+                    ))}
                 </div>
-                <div className="flex justify-between text-[8px] font-black text-slate-400 px-2 uppercase"><span>فراموشی</span><span>تسلط کامل</span></div>
+                <div className="flex justify-between text-[10px] font-black text-slate-500 px-2 uppercase italic"><span>خیلی بد</span><span>عالی</span></div>
             </div>
         )}
       </div>
@@ -116,60 +121,129 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="flex flex-col gap-2">
-            <button onClick={() => setView('dashboard')} className="px-5 py-2.5 bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 rounded-xl text-xs font-black shadow-md border dark:border-slate-700 flex items-center gap-2">
-              <i className="fa-solid fa-arrow-right"></i> بازگشت به داشبورد
+    <div className="space-y-12 animate-fade-in pb-20">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex flex-col gap-3">
+            <button onClick={() => setView('dashboard')} className="w-fit px-5 py-2 bg-white dark:bg-slate-800 text-slate-900 dark:text-white rounded-xl text-[11px] font-black border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center gap-2">
+              <i className="fa-solid fa-arrow-right"></i> داشبورد
             </button>
             <div>
-              <h2 className="text-3xl font-black dark:text-white">یادگیری هوشمند 🧠</h2>
-              <p className="text-slate-400 text-sm">مرور با الگوریتم تکرار با فاصله (SM-2)</p>
+              <h2 className="text-4xl font-black dark:text-white tracking-tighter uppercase italic">یادگیری هوشمند 🧠</h2>
+              <p className="text-slate-500 font-bold text-sm mt-1">تکنولوژی تکرار با فاصله (SM-2 Algorithm)</p>
             </div>
           </div>
-          <div className="flex gap-2 w-full md:w-auto">
-            <button onClick={() => setIsImporting(true)} className="flex-1 px-6 py-3 bg-emerald-500 text-white rounded-2xl font-black text-sm shadow-xl flex items-center gap-2"><i className="fa-solid fa-file-import"></i> وارد کردن سوال</button>
-            <button onClick={() => setIsCreating(true)} className="flex-1 px-6 py-3 bg-indigo-600 text-white rounded-2xl font-black text-sm shadow-xl flex items-center gap-2"><i className="fa-solid fa-plus"></i> کارت جدید</button>
+          <div className="flex gap-3 w-full md:w-auto">
+            <button onClick={() => setIsImporting(true)} className="flex-1 px-8 py-4 bg-emerald-400 text-black rounded-2xl font-black text-sm border-[3px] border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"><i className="fa-solid fa-file-import"></i> وارد کردن</button>
+            <button onClick={() => setIsCreating(true)} className="flex-1 px-8 py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm border-[3px] border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-2"><i className="fa-solid fa-plus"></i> کارت جدید</button>
           </div>
       </div>
 
       {isCreating ? (
-          <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 p-10 rounded-[2.5rem] shadow-2xl space-y-8 animate-slide-up">
-              <h2 className="text-2xl font-black dark:text-white">ایجاد کارت جدید</h2>
-              <textarea value={newCard.front} onChange={(e) => setNewCard({...newCard, front: e.target.value})} className="w-full p-5 dark:bg-slate-900 border-2 dark:border-slate-700 rounded-3xl outline-none min-h-[120px] text-lg font-bold" placeholder="سوال..." />
-              <textarea value={newCard.back} onChange={(e) => setNewCard({...newCard, back: e.target.value})} className="w-full p-5 dark:bg-slate-900 border-2 dark:border-slate-700 rounded-3xl outline-none min-h-[120px]" placeholder="پاسخ..." />
-              <div className="flex gap-4 pt-6"><button onClick={() => { if(!newCard.front) return; setFlashcards(prev => [...prev, { id: Date.now(), front: newCard.front!, back: newCard.back || '', category: 'عمومی', type: 'standard', tags: [], createdAt: Date.now(), dueDate: new Date().toISOString().split('T')[0], interval: 0, easeFactor: 2.5, repetitions: 0, errorCount: 0, difficulty: 'متوسط' }]); setIsCreating(false); }} className="flex-1 py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-lg shadow-xl">ذخیره</button><button onClick={() => setIsCreating(false)} className="px-10 py-5 bg-slate-50 dark:bg-slate-900 text-slate-500 rounded-[1.5rem] font-black">لغو</button></div>
+          <div className="max-w-2xl mx-auto bg-white dark:bg-slate-800 p-10 rounded-[3.5rem] border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)] space-y-8 animate-slide-up">
+              <h2 className="text-2xl font-black dark:text-white uppercase tracking-tighter">ساخت کارت جدید</h2>
+              <textarea value={newCard.front} onChange={(e) => setNewCard({...newCard, front: e.target.value})} className="w-full p-6 bg-slate-50 dark:bg-slate-900 border-[3px] border-black rounded-[2rem] outline-none min-h-[140px] text-xl font-black focus:bg-indigo-50 transition-colors" placeholder="صورت سوال یا کلمه..." />
+              <textarea value={newCard.back} onChange={(e) => setNewCard({...newCard, back: e.target.value})} className="w-full p-6 bg-slate-50 dark:bg-slate-900 border-[3px] border-black rounded-[2rem] outline-none min-h-[140px] font-bold focus:bg-emerald-50 transition-colors" placeholder="پاسخ یا تعریف..." />
+              <div className="flex gap-4 pt-4">
+                  <button onClick={() => { if(!newCard.front) return; setFlashcards(prev => [...prev, { id: Date.now(), front: newCard.front!, back: newCard.back || '', category: 'عمومی', type: 'standard', tags: [], createdAt: Date.now(), dueDate: new Date().toISOString().split('T')[0], interval: 0, easeFactor: 2.5, repetitions: 0, errorCount: 0, difficulty: 'متوسط' }]); setIsCreating(false); }} className="flex-[2] py-5 bg-indigo-600 text-white rounded-2xl font-black text-xl border-[4px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">ذخیره نهایی</button>
+                  <button onClick={() => setIsCreating(false)} className="flex-1 py-5 bg-white dark:bg-slate-900 text-slate-500 rounded-2xl font-black border-[4px] border-black">لغو</button>
+              </div>
           </div>
       ) : isImporting ? (
-        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-2xl animate-slide-up">
-            <div className="flex justify-between items-center mb-8">
+        <div className="max-w-4xl mx-auto bg-white dark:bg-slate-800 p-8 rounded-[3rem] border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)] animate-slide-up">
+            <div className="flex justify-between items-center mb-8 flex-row-reverse">
               <h2 className="text-2xl font-black dark:text-white">انتخاب از بانک سوالات</h2>
-              <button onClick={() => setIsImporting(false)} className="w-10 h-10 bg-slate-100 dark:bg-slate-900 rounded-full text-slate-400"><i className="fa-solid fa-xmark"></i></button>
+              <button onClick={() => setIsImporting(false)} className="w-12 h-12 bg-rose-500 text-white rounded-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"><i className="fa-solid fa-xmark"></i></button>
             </div>
-            <div className="max-h-[400px] overflow-y-auto space-y-4">
+            <div className="max-h-[400px] overflow-y-auto custom-scrollbar space-y-4 pr-2">
               {questions.map(q => (
-                <div key={q.id} onClick={() => setSelectedQuestionIds(prev => prev.includes(q.id) ? prev.filter(id => id !== q.id) : [...prev, q.id])} className={`p-4 rounded-xl border-2 cursor-pointer flex items-center gap-3 ${selectedQuestionIds.includes(q.id) ? 'border-indigo-600 bg-indigo-50' : 'border-slate-100'}`}>
-                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${selectedQuestionIds.includes(q.id) ? 'bg-indigo-600 border-indigo-600 text-white' : 'border-slate-200'}`}>{selectedQuestionIds.includes(q.id) && <i className="fa-solid fa-check text-[10px]"></i>}</div>
-                  <p className="font-bold text-sm text-right flex-1">{q.q}</p>
+                <div key={q.id} onClick={() => setSelectedQuestionIds(prev => prev.includes(q.id) ? prev.filter(id => id !== q.id) : [...prev, q.id])} className={`p-5 rounded-2xl border-[3px] cursor-pointer flex items-center gap-4 transition-all ${selectedQuestionIds.includes(q.id) ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 translate-x-1' : 'border-black bg-white dark:bg-slate-900'}`}>
+                  <div className={`w-8 h-8 rounded-xl border-[3px] border-black flex items-center justify-center text-lg ${selectedQuestionIds.includes(q.id) ? 'bg-indigo-600 text-white' : 'bg-slate-100'}`}>{selectedQuestionIds.includes(q.id) && <i className="fa-solid fa-check"></i>}</div>
+                  <p className="font-black text-sm text-right flex-1 dark:text-white">{q.q}</p>
                 </div>
               ))}
             </div>
-            <button onClick={() => { setFlashcards(prev => [...prev, ...questions.filter(q => selectedQuestionIds.includes(q.id)).map(q => ({ id: Date.now()+Math.random(), front: q.q, back: q.o[q.a], category: q.c, type: 'standard' as CardType, tags: [], createdAt: Date.now(), dueDate: new Date().toISOString().split('T')[0], interval: 0, easeFactor: 2.5, repetitions: 0, errorCount: 0, difficulty: q.difficulty }))]); setIsImporting(false); setSelectedQuestionIds([]); }} disabled={selectedQuestionIds.length === 0} className="w-full mt-6 py-4 bg-indigo-600 text-white rounded-2xl font-black disabled:opacity-30">تایید نهایی</button>
+            <button onClick={() => { setFlashcards(prev => [...prev, ...questions.filter(q => selectedQuestionIds.includes(q.id)).map(q => ({ id: Date.now()+Math.random(), front: q.q, back: q.o[q.a], category: q.c, type: 'standard' as CardType, tags: [], createdAt: Date.now(), dueDate: new Date().toISOString().split('T')[0], interval: 0, easeFactor: 2.5, repetitions: 0, errorCount: 0, difficulty: q.difficulty }))]); setIsImporting(false); setSelectedQuestionIds([]); }} disabled={selectedQuestionIds.length === 0} className="w-full mt-8 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-xl border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:opacity-30">تایید و اضافه کردن</button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="bg-white dark:bg-slate-800 p-10 rounded-[2.5rem] shadow-sm text-center border dark:border-slate-700">
-                <div className="text-5xl font-black text-indigo-600">{dueCards.length}</div>
-                <p className="text-slate-400 text-[10px] font-black uppercase mt-2">کارت آماده مرور</p>
-                <button onClick={startSession} disabled={dueCards.length === 0} className="w-full mt-6 py-5 bg-indigo-600 text-white rounded-[1.5rem] font-black text-lg disabled:opacity-50">شروع ماراتن یادگیری</button>
-            </div>
-            <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] shadow-sm border dark:border-slate-700">
-                <h3 className="font-black dark:text-white mb-6">موضوعات فعال</h3>
-                <div className="flex flex-wrap gap-2">
-                    {Array.from(new Set(flashcards.map(c => c.category))).map(cat => <div key={cat} className="px-5 py-3 bg-slate-50 dark:bg-slate-900 text-slate-600 rounded-2xl text-xs font-black">{cat}</div>)}
+        <>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white dark:bg-slate-800 p-12 rounded-[3.5rem] border-[6px] border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] text-center flex flex-col justify-center gap-4">
+                    <div className="text-7xl font-black text-indigo-600 dark:text-indigo-400 italic">{dueCards.length}</div>
+                    <p className="text-slate-400 text-xs font-black uppercase tracking-widest">کارت‌های آماده مرور امروز</p>
+                    <button onClick={startSession} disabled={dueCards.length === 0} className="w-full mt-6 py-6 bg-indigo-600 text-white rounded-[2rem] font-black text-2xl border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all uppercase italic">
+                        شروع ماراتن ذهن 🚀
+                    </button>
+                </div>
+                <div className="bg-white dark:bg-slate-800 p-10 rounded-[3.5rem] border-[6px] border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+                    <h3 className="text-xl font-black dark:text-white mb-8 border-b-4 border-black pb-4 uppercase italic">موضوعات داغ</h3>
+                    <div className="flex flex-wrap gap-3">
+                        {Array.from(new Set(flashcards.map(c => c.category))).length > 0 ? 
+                            Array.from(new Set(flashcards.map(c => c.category))).map(cat => <div key={cat} className="px-6 py-3 bg-amber-400 text-black border-[3px] border-black rounded-2xl text-[11px] font-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">{cat}</div>)
+                            : <p className="text-slate-400 font-bold italic">هنوز دسته‌بندی ندارید...</p>
+                        }
+                    </div>
                 </div>
             </div>
-        </div>
+
+            {/* بخش تکنیک‌های طلایی یادگیری */}
+            <div className="space-y-8 mt-16">
+                <div className="flex items-center gap-4 flex-row-reverse">
+                    <div className="h-1 flex-1 bg-black dark:bg-white rounded-full"></div>
+                    <h3 className="text-2xl md:text-3xl font-black dark:text-white uppercase italic tracking-tighter">تکنیک‌های طلایی یادگیری سریع 🎓</h3>
+                    <div className="h-1 flex-1 bg-black dark:bg-white rounded-full"></div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {/* ۱. تکنیک‌های یادگیری سریع */}
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(79,70,229,1)] space-y-6 text-right">
+                        <div className="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-2xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"><i className="fa-solid fa-bolt-lightning"></i></div>
+                        <h4 className="text-xl font-black dark:text-white">۱. یادگیری علمی</h4>
+                        <div className="space-y-4 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300">
+                            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
+                                <span className="text-indigo-600 dark:text-indigo-400 block mb-1 font-black">بازیابی فعال (Active Recall):</span>
+                                بعد از خواندن، کتاب را ببندید و هر چه یادتان هست را بازگو کنید. این پیوندهای عصبی را بسیار قوی‌تر از روخوانی ساده می‌کند.
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
+                                <span className="text-indigo-600 dark:text-indigo-400 block mb-1 font-black">تکنیک فاینمن:</span>
+                                تصور کنید می‌خواهید مطلب را به یک کودک ۱۰ ساله درس بدهید. کلمات ساده و مثال‌ها، نقاط ضعف شما را آشکار می‌کند.
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ۲. مدیریت زمان و تمرکز */}
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(244,63,94,1)] space-y-6 text-right">
+                        <div className="w-14 h-14 bg-rose-500 text-white rounded-2xl flex items-center justify-center text-2xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"><i className="fa-solid fa-clock-rotate-left"></i></div>
+                        <h4 className="text-xl font-black dark:text-white">۲. زمان و تمرکز</h4>
+                        <div className="space-y-4 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300">
+                            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
+                                <span className="text-rose-600 dark:text-rose-400 block mb-1 font-black">پومودورو (اصلاح شده):</span>
+                                ۵۰ دقیقه تمرکز کامل و ۱۰ دقیقه استراحت. در آن ۵۰ دقیقه گوشی باید در اتاق دیگری باشد!
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
+                                <span className="text-rose-600 dark:text-rose-400 block mb-1 font-black">قانون پارکینسون:</span>
+                                زمان مشخص و کوتاهی برای فصل تعیین کنید. اگر کل روز وقت بگذارید، مطالعه آن کل روز طول خواهد کشید!
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* ۳. سازماندهی محتوا (یادگیری بصری) */}
+                    <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(16,185,129,1)] space-y-6 text-right">
+                        <div className="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-2xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"><i className="fa-solid fa-eye"></i></div>
+                        <h4 className="text-xl font-black dark:text-white">۳. قدرت تصاویر</h4>
+                        <div className="space-y-4 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300">
+                            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
+                                <span className="text-emerald-600 dark:text-emerald-400 block mb-1 font-black">نقشه ذهنی (Mind Map):</span>
+                                از نمودارهای درختی استفاده کنید. مغز تصاویر را ۶۰ هزار برابر سریع‌تر از متن پردازش می‌کند.
+                            </div>
+                            <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
+                                <span className="text-emerald-600 dark:text-emerald-400 block mb-1 font-black">تکرار فاصله‌دار:</span>
+                                از سیستم فلش‌کارت (Anki) همین اپلیکیشن استفاده کنید تا مطالب از حافظه کوتاه‌مدت به بلندمدت منتقل شوند.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </>
       )}
     </div>
   );
