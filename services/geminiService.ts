@@ -18,8 +18,10 @@ export const generateQuestions = async (
   sourceText?: string,
   types: string[] = ['mcq']
 ): Promise<Question[]> => {
+  // Always create a new instance before making an API call
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const model = 'gemini-3-flash-preview';
+  // Use gemini-3-pro-preview for complex reasoning and STEM tasks like math exam generation
+  const model = 'gemini-3-pro-preview';
 
   // محدودسازی متن برای سرعت بیشتر در موبایل (بهینه‌سازی شده برای جلوگیری از تایم‌اوت)
   const truncatedSource = sourceText ? sourceText.substring(0, 8000) : "";
@@ -72,8 +74,10 @@ export const generateQuestions = async (
 };
 
 export const getDeepExplanation = async (question: string, answer: string, lang: Language): Promise<string> => {
+  // Always create a new instance before making an API call
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  const model = 'gemini-3-flash-preview';
+  // Use gemini-3-pro-preview for deep educational explanations
+  const model = 'gemini-3-pro-preview';
 
   const prompt = `Explain the educational reasoning behind this answer in ${LANG_NAMES[lang]}:
   Question: "${question}"
@@ -84,7 +88,11 @@ export const getDeepExplanation = async (question: string, answer: string, lang:
     const response = await ai.models.generateContent({
       model,
       contents: prompt,
-      config: { thinkingConfig: { thinkingBudget: 0 } }
+      config: { 
+        // Optional: Disable thinking budget for faster responses on simple explanations,
+        // or set a budget for complex reasoning tasks.
+        thinkingConfig: { thinkingBudget: 0 } 
+      }
     });
     return response.text || "تحلیلی تولید نشد.";
   } catch (error) {

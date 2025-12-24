@@ -41,9 +41,13 @@ const App: React.FC = () => {
   const [isPremium, setIsPremium] = useState<boolean>(() => 
     localStorage.getItem('isPremium') === 'true'
   );
-  const [darkMode, setDarkMode] = useState<boolean>(() => 
-    localStorage.getItem('darkMode') === 'true'
-  );
+  const [darkMode, setDarkMode] = useState<boolean>(() => {
+    // FIX: Using (window as any) to fix the TypeScript error regarding the Telegram property
+    if ((window as any).Telegram?.WebApp) {
+        return (window as any).Telegram.WebApp.colorScheme === 'dark';
+    }
+    return localStorage.getItem('darkMode') === 'true';
+  });
   
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
   const [isInstallable, setIsInstallable] = useState(false);
@@ -58,6 +62,24 @@ const App: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
+    // FIX: Using (window as any) to access the injected Telegram WebApp object safely
+    if ((window as any).Telegram?.WebApp) {
+        const tg = (window as any).Telegram.WebApp;
+        tg.ready();
+        tg.expand(); // باز کردن کامل صفحه در موبایل
+        
+        // تنظیم رنگ هدر تلگرام
+        tg.setHeaderColor(darkMode ? '#0f172a' : '#ffffff');
+
+        // مدیریت دکمه بازگشت بومی تلگرام
+        if (view !== 'dashboard') {
+            tg.BackButton.show();
+            tg.BackButton.onClick(() => setView('dashboard'));
+        } else {
+            tg.BackButton.hide();
+        }
+    }
+
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       setDeferredPrompt(e);
@@ -76,16 +98,7 @@ const App: React.FC = () => {
     
     if (darkMode) document.body.classList.add('dark');
     else document.body.classList.remove('dark');
-
-    const syncAds = async () => {
-      const savedSettings = localStorage.getItem('az_manager_ad');
-      if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        setDynamicAd({ title: settings.title, desc: settings.desc, btn: settings.btn, url: settings.url || "#" });
-      }
-    };
-    syncAds();
-  }, [questions, flashcards, userStats, lang, isPremium, darkMode]);
+  }, [questions, flashcards, userStats, lang, isPremium, darkMode, view]);
 
   const t = (key: string) => TRANSLATIONS[lang][key] || TRANSLATIONS['fa'][key] || key;
   
