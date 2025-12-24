@@ -23,10 +23,9 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
     return filter === 'all' ? questions : questions.filter(q => q.c === filter);
   }, [questions, filter]);
 
-  // لیستی از سوالاتی که باید چاپ شوند (با حفظ ترتیب انتخاب یا فیلتر)
+  // لیستی از سوالاتی که باید چاپ شوند
   const questionsToPrint = useMemo(() => {
     if (selectedIds.length === 0) return filteredQuestions;
-    // برگرداندن سوالات بر اساس ایدی‌های انتخاب شده
     return questions.filter((_, idx) => selectedIds.includes(idx));
   }, [questions, selectedIds, filteredQuestions]);
 
@@ -54,17 +53,19 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
   };
 
   const handlePrint = () => {
-    if (!isPremium) {
-        if (window.confirm('قابلیت "چاپ حرفه‌ای آزمون" مخصوص کاربران طلایی است. آیا مایل به ارتقای حساب خود هستید؟')) {
+    if (selectedIds.length === 0) {
+        alert('لطفاً حداقل یک سوال را برای چاپ انتخاب کنید.');
+        return;
+    }
+
+    // اجازه چاپ تا ۲ سوال برای نسخه رایگان
+    if (!isPremium && selectedIds.length > 2) {
+        if (window.confirm('در نسخه رایگان حداکثر ۲ سوال قابل چاپ است. برای چاپ نامحدود سوالات، حساب خود را به طلایی ارتقا دهید. آیا مایل به ارتقا هستید؟')) {
             setView('settings');
         }
         return;
     }
     
-    if (selectedIds.length === 0) {
-        alert('لطفاً حداقل یک سوال را برای چاپ انتخاب کنید.');
-        return;
-    }
     window.print();
   };
 
@@ -126,7 +127,7 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
             border-radius: 2px;
           }
           .q-text { font-size: 10.5pt !important; font-weight: bold !important; margin-bottom: 4pt !important; line-height: 1.3; }
-          .answer-key-section { break-before: page; margin-top: 20pt; }
+          .answer-key-section { break-before: auto; margin-top: 20pt; border-top: 1px dashed #000; padding-top: 10pt; }
           .print-label { font-weight: 900; }
         }
       `}</style>
@@ -169,7 +170,7 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
           </button>
           <div>
             <h2 className="text-3xl font-black text-slate-800 dark:text-white">بانک سوالات 📚</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">مدیریت و تولید آزمون (شماره‌گذاری هوشمند)</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">مدیریت و تولید آزمون (چاپ متوالی)</p>
           </div>
         </div>
         
@@ -217,15 +218,18 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">
                     <span className="text-xs font-black">{selectedIds.length}</span>
                 </div>
-                <span className="text-sm font-black italic">سوال در لیست چاپ (ترتیب متوالی)</span>
+                <div className="text-right">
+                    <span className="text-sm font-black italic block">سوال در لیست چاپ</span>
+                    {!isPremium && selectedIds.length > 2 && <span className="text-[10px] text-rose-400 font-bold">حداکثر ۲ سوال در نسخه رایگان</span>}
+                </div>
               </div>
               <div className="flex gap-3 w-full sm:w-auto">
                   <button 
                     onClick={handlePrint} 
-                    className={`flex-1 sm:flex-none px-8 py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 border-2 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] active:translate-x-0.5 active:translate-y-0.5 transition-all ${isPremium ? 'bg-emerald-500 text-black' : 'bg-amber-400 text-black'}`}
+                    className={`flex-1 sm:flex-none px-8 py-3 rounded-xl text-xs font-black flex items-center justify-center gap-2 border-2 border-black shadow-[4px_4px_0px_0px_rgba(255,255,255,0.2)] active:translate-x-0.5 active:translate-y-0.5 transition-all ${isPremium || selectedIds.length <= 2 ? 'bg-emerald-500 text-black' : 'bg-amber-400 text-black'}`}
                   >
-                    <i className={`fa-solid ${isPremium ? 'fa-print' : 'fa-lock'}`}></i>
-                    {isPremium ? 'تولید برگه آزمون (A4)' : 'ارتقا برای چاپ'}
+                    <i className={`fa-solid ${isPremium || selectedIds.length <= 2 ? 'fa-print' : 'fa-lock'}`}></i>
+                    {isPremium ? 'تولید برگه آزمون' : (selectedIds.length <= 2 ? `چاپ ${selectedIds.length} سوال (رایگان)` : 'ارتقا برای چاپ بیشتر')}
                   </button>
                   <button onClick={deleteSelected} className="px-4 py-3 bg-rose-500 text-white rounded-xl text-xs font-black border-2 border-black hover:bg-rose-600 transition-colors">
                     <i className="fa-solid fa-trash"></i>
@@ -234,7 +238,7 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
           </div>
       )}
 
-      {/* لیست اصلی نمایش سوالات */}
+      {/* Main List Rendering */}
       <div className="grid gap-6 print:block pb-10">
           {(selectedIds.length > 0 ? questionsToPrint : filteredQuestions).length === 0 ? (
             <div className="py-20 text-center bg-white dark:bg-slate-800 rounded-[2.5rem] border-[3px] border-black border-dashed no-print">
@@ -287,6 +291,7 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
           })}
       </div>
 
+      {/* Answer Key Section (Teacher Copy) */}
       <div className="hidden print:block answer-key-section">
         <div className="border-[2px] border-black p-6 rounded-xl">
             <h3 className="text-lg font-black mb-4 text-center text-black border-b border-black pb-2 italic">کلید آزمون (پاسخ‌نامه مدرس)</h3>
@@ -303,7 +308,7 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
                     <p className="font-bold text-[9pt] mb-8">مهر و امضا</p>
                     <div className="w-32 border-b border-black"></div>
                 </div>
-                <div className="text-[7pt] text-slate-400">Smart Exam Assistant Pro - Sequential Numbering Active</div>
+                <div className="text-[7pt] text-slate-400">Smart Exam Assistant - Standard Edition</div>
             </div>
         </div>
       </div>
