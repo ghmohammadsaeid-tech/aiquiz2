@@ -29,37 +29,6 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
     { name: 'Gemini', color: 'bg-indigo-600', icon: 'fa-solid fa-sparkles' }
   ];
 
-  const getGoldenPrompt = () => {
-    const typesStr = qTypes.join(', ');
-    const langName = lang === 'fa' ? 'Persian' : 'English';
-    return `Act as an expert exam generator for ${selectedEngine}. 
-Create ${count} high-quality questions about "${topic || 'General Knowledge'}" with ${difficulty} difficulty in ${langName}.
-Question types: ${typesStr}.
-STRICT: OUTPUT ONLY RAW JSON ARRAY. NO MARKDOWN.
-JSON Structure:
-[{"q": "question", "o": ["opt1", "opt2", "opt3", "opt4"], "a": 0, "c": "Category", "difficulty": "${difficulty}"}]`;
-  };
-
-  const copyGoldenPrompt = () => {
-    navigator.clipboard.writeText(getGoldenPrompt());
-    alert('🔥 پرامپت طلایی با موفقیت کپی شد!');
-  };
-
-  const handleTypeToggle = (type: string) => {
-    setQTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
-  };
-
-  const handleCountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const val = parseInt(e.target.value);
-    if ((val === 50 || val === 100) && !isPremium) {
-        if (window.confirm('طراحی ۵۰ یا ۱۰۰ سوال همزمان، مخصوص کاربران طلایی است. مایل به ارتقای حساب هستید؟')) {
-            setView('settings');
-        }
-        return;
-    }
-    setCount(val);
-  };
-
   const handleGenerate = async () => {
     if (method === 'topic' && !topic) return alert('لطفاً موضوع را وارد کنید');
     if (method === 'text' && !sourceText) return alert('لطفاً متن را کپی کنید');
@@ -70,11 +39,25 @@ JSON Structure:
     }
 
     setLoading(true);
+    setPreview([]); // پاکسازی پیش‌نمایش قبلی
+    
     try {
-      const res = await generateQuestions(topic, count, difficulty, lang, selectedEngine, method === 'text' ? sourceText : undefined, qTypes);
-      setPreview(res);
+      const res = await generateQuestions(
+        topic, 
+        count, 
+        difficulty, 
+        lang, 
+        selectedEngine, 
+        method === 'text' ? sourceText : undefined, 
+        qTypes
+      );
+      if (res && res.length > 0) {
+        setPreview(res);
+      } else {
+        alert("سوالی طراحی نشد. لطفاً موضوع یا متن را تغییر دهید.");
+      }
     } catch (err: any) {
-      alert(err.message);
+      alert(err.message || "خطای ناشناخته در طراحی سوال.");
     } finally {
       setLoading(false);
     }
@@ -95,9 +78,23 @@ JSON Structure:
     }
   };
 
+  const handleTypeToggle = (type: string) => {
+    setQTypes(prev => prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]);
+  };
+
+  const handleCountChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const val = parseInt(e.target.value);
+    if ((val === 50 || val === 100) && !isPremium) {
+        if (window.confirm('طراحی ۵۰ یا ۱۰۰ سوال همزمان، مخصوص کاربران طلایی است. مایل به ارتقای حساب هستید؟')) {
+            setView('settings');
+        }
+        return;
+    }
+    setCount(val);
+  };
+
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-24 text-right animate-fade-in px-2">
-      {/* Header Selection */}
       <div className="bg-white dark:bg-slate-800 p-4 rounded-[2rem] shadow-sm border dark:border-slate-700 flex flex-col md:flex-row-reverse items-center justify-between gap-4">
           <div className="flex items-center gap-2 flex-row-reverse w-full md:w-auto overflow-x-auto no-scrollbar pb-1 md:pb-0">
               <span className="text-[9px] md:text-[10px] font-black text-slate-400 whitespace-nowrap">منطق طراحی:</span>
@@ -117,7 +114,6 @@ JSON Structure:
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 md:gap-6">
-        {/* Sidebar Settings */}
         <div className="lg:col-span-1 space-y-4">
           <div className="bg-white dark:bg-slate-800 p-5 md:p-6 rounded-[2rem] border-2 dark:border-slate-700 shadow-sm space-y-6">
             <h3 className="font-black text-[11px] md:text-xs border-b dark:border-slate-700 pb-3 flex items-center gap-2 flex-row-reverse"><i className="fa-solid fa-sliders text-indigo-500"></i> تنظیمات آزمون</h3>
@@ -155,41 +151,16 @@ JSON Structure:
           </div>
         </div>
 
-        {/* Content Area */}
         <div className="lg:col-span-3">
             <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] md:rounded-[3rem] border-2 dark:border-slate-700 shadow-sm h-full flex flex-col gap-6">
                 {method === 'manual' ? (
                     <div className="space-y-6 animate-slide-up">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                            {[
-                                { step: 1, title: 'کپی پرامپت طلایی', icon: 'fa-copy', color: 'bg-amber-100 text-amber-600' },
-                                { step: 2, title: 'اجرا در AI', icon: 'fa-robot', color: 'bg-indigo-100 text-indigo-600' },
-                                { step: 3, title: 'چسباندن کد JSON', icon: 'fa-code', color: 'bg-emerald-100 text-emerald-600' }
-                            ].map(s => (
-                                <div key={s.step} className="p-3 bg-slate-50 dark:bg-slate-900 rounded-2xl border dark:border-slate-700 text-right flex items-center gap-3 flex-row-reverse">
-                                    <div className={`w-8 h-8 ${s.color} rounded-lg flex items-center justify-center text-sm`}><i className={`fa-solid ${s.icon}`}></i></div>
-                                    <h4 className="text-[10px] font-black dark:text-white leading-tight">{s.step}. {s.title}</h4>
-                                </div>
-                            ))}
-                        </div>
-
-                        <div className="bg-indigo-600 p-5 rounded-2xl text-white flex flex-col md:flex-row items-center justify-between gap-4 shadow-xl">
-                            <div className="text-right w-full md:w-auto">
-                                <h3 className="font-black text-xs md:text-sm">آماده‌سازی برای {selectedEngine}</h3>
-                                <p className="text-[9px] opacity-80 mt-1">پرامپت بر اساس مدل انتخابی بهینه شده است.</p>
-                            </div>
-                            <button onClick={copyGoldenPrompt} className="w-full md:w-auto px-6 py-3 bg-white text-indigo-600 rounded-xl font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
-                                <i className="fa-solid fa-copy"></i> کپی پرامپت طلایی
-                            </button>
-                        </div>
-
                         <textarea 
                             value={manualJson} 
                             onChange={(e) => setManualJson(e.target.value)} 
                             placeholder="کد JSON را اینجا قرار دهید..." 
-                            className="w-full h-40 md:h-48 p-5 bg-slate-50 dark:bg-slate-900 border-2 dark:border-slate-700 rounded-2xl md:rounded-3xl outline-none text-[11px] font-mono text-indigo-500 focus:border-indigo-500 transition-all shadow-inner"
+                            className="w-full h-48 p-5 bg-slate-50 dark:bg-slate-900 border-2 dark:border-slate-700 rounded-2xl md:rounded-3xl outline-none text-[11px] font-mono text-indigo-500 focus:border-indigo-500 transition-all shadow-inner"
                         />
-
                         <button onClick={handleManualImport} className="w-full py-5 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black text-lg shadow-2xl active:scale-95 transition-all">
                             <i className="fa-solid fa-bolt-lightning ml-2"></i> استخراج سوالات
                         </button>
@@ -211,7 +182,7 @@ JSON Structure:
                             </div>
                         )}
                         <button onClick={handleGenerate} disabled={loading} className="w-full py-5 md:py-6 bg-indigo-600 text-white rounded-[1.5rem] md:rounded-[2rem] font-black text-xl md:text-2xl disabled:opacity-50 shadow-2xl active:scale-95 transition-all">
-                            {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
+                            {loading ? <i className="fa-solid fa-spinner fa-spin mr-2"></i> : <i className="fa-solid fa-wand-magic-sparkles mr-2"></i>}
                             {loading ? 'در حال طراحی هوشمند...' : 'شروع عملیات طراحی'}
                         </button>
                     </div>
