@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
 <head>
@@ -45,6 +46,12 @@
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .ad-glow { animation: ad-glow 2s infinite alternate; }
         @keyframes ad-glow { from { box-shadow: 0 0 5px rgba(99, 102, 241, 0.2); } to { box-shadow: 0 0 20px rgba(99, 102, 241, 0.5); } }
+        
+        @keyframes bounce-subtle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        .animate-bounce-subtle { animation: bounce-subtle 3s infinite ease-in-out; }
     </style>
 <script type="importmap">
 {

@@ -45,6 +45,10 @@ const App: React.FC = () => {
     localStorage.getItem('darkMode') === 'true'
   );
   
+  // PWA Install Logic
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isInstallable, setIsInstallable] = useState(false);
+
   // سیستم تبلیغات داینامیک سراسری
   const [dynamicAd, setDynamicAd] = useState({
     title: AD_CONFIG.dashboard.title,
@@ -54,9 +58,20 @@ const App: React.FC = () => {
   });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [showInstallBanner, setShowInstallBanner] = useState(false);
 
   useEffect(() => {
+    // Listen for install prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setIsInstallable(true);
+    });
+
+    window.addEventListener('appinstalled', () => {
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    });
+
     localStorage.setItem('questions', JSON.stringify(questions));
     localStorage.setItem('flashcards', JSON.stringify(flashcards));
     localStorage.setItem('userStats', JSON.stringify(userStats));
@@ -68,7 +83,6 @@ const App: React.FC = () => {
     if (darkMode) document.body.classList.add('dark');
     else document.body.classList.remove('dark');
 
-    // همگام‌سازی ابری تبلیغات برای کل برنامه
     const syncAds = async () => {
       const savedSettings = localStorage.getItem('az_manager_ad');
       if (savedSettings) {
@@ -84,25 +98,25 @@ const App: React.FC = () => {
               url: data.url || "#"
             });
           } catch (e) {
-            setDynamicAd({
-              title: settings.title,
-              desc: settings.desc,
-              btn: settings.btn,
-              url: "#"
-            });
+            setDynamicAd({ title: settings.title, desc: settings.desc, btn: settings.btn, url: "#" });
           }
         } else {
-          setDynamicAd({
-            title: settings.title,
-            desc: settings.desc,
-            btn: settings.btn,
-            url: "#"
-          });
+          setDynamicAd({ title: settings.title, desc: settings.desc, btn: settings.btn, url: "#" });
         }
       }
     };
     syncAds();
   }, [questions, flashcards, userStats, lang, isPremium, darkMode]);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+    }
+    setDeferredPrompt(null);
+  };
 
   const t = (key: string) => TRANSLATIONS[lang][key] || key;
   const dueCardsCount = useMemo(() => {
@@ -120,14 +134,14 @@ const App: React.FC = () => {
 
   const renderContent = () => {
     switch (view) {
-      case 'dashboard': return <Dashboard questions={questions} flashcards={flashcards} setView={setView} dueCards={dueCardsCount} userStats={userStats} t={t} isPremium={isPremium} lang={lang} dynamicAd={dynamicAd} />;
+      case 'dashboard': return <Dashboard questions={questions} flashcards={flashcards} setView={setView} dueCards={dueCardsCount} userStats={userStats} t={t} isPremium={isPremium} lang={lang} dynamicAd={dynamicAd} isInstallable={isInstallable} onInstall={handleInstallClick} />;
       case 'exam': return <Exam questions={questions} setView={setView} lang={lang} t={t} isPremium={isPremium} dynamicAd={dynamicAd} />;
       case 'flashcards': return <FlashcardSystem flashcards={flashcards} setFlashcards={setFlashcards} questions={questions} setView={setView} lang={lang} t={t} onReviewComplete={addXp} isPremium={isPremium} dynamicAd={dynamicAd} />;
       case 'bank': return <QuestionBank questions={questions} setQuestions={setQuestions} setFlashcards={setFlashcards} lang={lang} t={t} isPremium={isPremium} setView={setView} />;
       case 'ai': return <AIAssistant setQuestions={setQuestions} lang={lang} t={t} isPremium={isPremium} setView={setView} />;
       case 'stats': return <Stats flashcards={flashcards} userStats={userStats} t={t} lang={lang} setView={setView} />;
       case 'settings': return <Settings questions={questions} setQuestions={setQuestions} flashcards={flashcards} setFlashcards={setFlashcards} lang={lang} setLang={setLang} t={t} isPremium={isPremium} setIsPremium={setIsPremium} userStats={userStats} setUserStats={setUserStats} darkMode={darkMode} setDarkMode={setDarkMode} setView={setView} />;
-      default: return <Dashboard questions={questions} flashcards={flashcards} setView={setView} dueCards={dueCardsCount} userStats={userStats} t={t} isPremium={isPremium} lang={lang} dynamicAd={dynamicAd} />;
+      default: return <Dashboard questions={questions} flashcards={flashcards} setView={setView} dueCards={dueCardsCount} userStats={userStats} t={t} isPremium={isPremium} lang={lang} dynamicAd={dynamicAd} isInstallable={isInstallable} onInstall={handleInstallClick} />;
     }
   };
 
