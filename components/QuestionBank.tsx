@@ -94,54 +94,60 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
     <div className="space-y-6 animate-fade-in">
       <style>{`
         @media print {
-          @page { size: A4; margin: 15mm; }
-          body { background: white !important; font-size: 11pt !important; color: black !important; }
+          @page { size: A4; margin: 10mm 15mm; }
+          body { background: white !important; font-size: 10pt !important; color: black !important; }
           .no-print { display: none !important; }
           .question-card { 
             border: none !important; 
             box-shadow: none !important; 
-            margin-bottom: 12pt !important; 
+            margin-bottom: 15pt !important; 
             padding: 0 !important;
             break-inside: avoid;
+            page-break-inside: avoid;
           }
           .option-box { 
-            padding: 4pt 8pt !important; 
-            border: 1px solid #000 !important; 
-            font-size: 10pt !important;
+            padding: 3pt 8pt !important; 
+            border: 1px solid #333 !important; 
+            font-size: 9.5pt !important;
             background: none !important;
+            margin-top: 2pt !important;
           }
           .exam-header {
             border: 2px solid #000 !important;
-            padding: 10pt !important;
-            margin-bottom: 15pt !important;
+            padding: 8pt !important;
+            margin-bottom: 20pt !important;
+            border-radius: 4px;
           }
-          .q-text { font-size: 12pt !important; font-weight: bold !important; margin-bottom: 6pt !important; }
-          .answer-key-section { break-before: page; margin-top: 20pt; }
+          .q-text { font-size: 11pt !important; font-weight: bold !important; margin-bottom: 5pt !important; line-height: 1.4; }
+          .answer-key-section { break-before: page; margin-top: 30pt; }
+          .print-label { font-weight: 900; }
         }
       `}</style>
 
-      {/* Professional Exam Print Header (Visible only when printing) */}
+      {/* Professional Exam Print Header */}
       <div className="hidden print:block text-black">
         <div className="exam-header relative text-right">
-            <div className="flex justify-between items-start flex-row-reverse mb-4">
-                <div className="space-y-1">
-                    <p className="font-bold text-[10pt]">تاریخ: ...................</p>
-                    <p className="font-bold text-[10pt]">مدت: ...................</p>
+            <div className="flex justify-between items-start flex-row-reverse mb-3">
+                <div className="space-y-1 text-[9pt]">
+                    <p><span className="print-label">تاریخ آزمون:</span> ...................</p>
+                    <p><span className="print-label">مدت پاسخگویی:</span> ...................</p>
                 </div>
                 <div className="text-center">
-                    <h1 className="text-lg font-black border-b-2 border-black pb-1 mb-1">بسمه تعالی</h1>
-                    <h2 className="text-md font-black">آزمون کلاسی: {filter === 'all' ? 'جامع' : filter}</h2>
+                    <h1 className="text-sm font-black mb-1">باسمه تعالی</h1>
+                    <h2 className="text-lg font-black italic">برگه سوالات آزمون کلاسی</h2>
                 </div>
-                <div className="text-left">
-                    <div className="w-16 h-16 border-2 border-dashed border-black flex items-center justify-center text-[8px] text-slate-400">محل بارکد/مهر</div>
+                <div className="text-left text-[8pt]">
+                    <p>نمره: .........</p>
                 </div>
             </div>
             
             <div className="grid grid-cols-2 gap-4 border-t border-black pt-2 mb-2">
-                <div className="font-bold text-[10pt]">نام و نام خانوادگی: .......................................</div>
-                <div className="font-bold text-[10pt]">شماره صندلی: ...................</div>
+                <div className="text-[10pt]"><span className="print-label">نام و نام خانوادگی دانشجو:</span> .......................................</div>
+                <div className="text-[10pt]"><span className="print-label">نام درس/موضوع:</span> {filter === 'all' ? 'آزمون جامع' : filter}</div>
             </div>
-            <div className="font-bold text-[10pt] border-b border-black pb-2">نام مدرس: ...........................................</div>
+            <div className="text-[10pt] border-b border-black pb-2 mb-2">
+                <span className="print-label">نام استاد:</span> ...........................................
+            </div>
         </div>
       </div>
 

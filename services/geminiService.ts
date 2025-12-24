@@ -10,16 +10,19 @@ const LANG_NAMES: Record<Language, string> = {
 };
 
 /**
- * استخراج دقیق آرایه JSON از متن خروجی هوش مصنوعی
- * این تابع تمام متون اضافی قبل و بعد از اولین [ و آخرین ] را حذف می‌کند.
+ * پاکسازی خروجی برای استخراج آرایه JSON خالص
  */
-const extractJsonArray = (text: string): string => {
-  const startIndex = text.indexOf('[');
-  const endIndex = text.lastIndexOf(']');
-  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-    return text.substring(startIndex, endIndex + 1);
+const cleanJsonResponse = (text: string): string => {
+  try {
+    const startIndex = text.indexOf('[');
+    const endIndex = text.lastIndexOf(']');
+    if (startIndex !== -1 && endIndex !== -1) {
+      return text.substring(startIndex, endIndex + 1);
+    }
+    return text.trim();
+  } catch (e) {
+    return text;
   }
-  return text.trim();
 };
 
 export const generateQuestions = async (
@@ -31,26 +34,29 @@ export const generateQuestions = async (
   sourceText?: string
 ): Promise<Question[]> => {
   const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-  // استفاده از مدل فلش ۳ برای سرعت و دقت بالا در وظایف متنی
   const model = 'gemini-3-flash-preview';
 
+  // محدود کردن متن ورودی برای جلوگیری از خطای حجم زیاد
+  const safeSourceText = sourceText ? sourceText.substring(0, 15000) : "";
   const contextInfo = sourceText 
-    ? `Based ONLY on this text: "${sourceText.substring(0, 12000)}"` 
-    : `On the topic of: "${topic}"`;
+    ? `Analyze this text and create questions: "${safeSourceText}"` 
+    : `Topic: "${topic}"`;
 
-  const prompt = `Task: Create ${count} multiple-choice questions in ${LANG_NAMES[lang]}.
+  const prompt = `Task: Create exactly ${count} professional multiple-choice questions in ${LANG_NAMES[lang]}.
 Difficulty: ${difficulty}.
 Context: ${contextInfo}.
 
-Rules:
-1. Output MUST be a valid JSON array of objects.
-2. Each object must have: 
-   - "q": string (the question)
-   - "o": array of 4 strings (options)
-   - "a": integer (index of correct option, 0-3)
-   - "c": string (category name)
-   - "difficulty": string ("${difficulty}")
-3. No introduction or explanation text. Just the JSON.`;
+JSON Structure (MANDATORY):
+[
+  {
+    "q": "question text",
+    "o": ["option1", "option2", "option3", "option4"],
+    "a": 0,
+    "c": "category name",
+    "difficulty": "${difficulty}"
+  }
+]
+Only return the JSON array. No conversational text.`;
 
   try {
     const response = await ai.models.generateContent({
@@ -58,7 +64,6 @@ Rules:
       contents: prompt,
       config: {
         responseMimeType: "application/json",
-        // استفاده از اسکیما برای تضمین ساختار خروجی
         responseSchema: {
           type: Type.ARRAY,
           items: {
@@ -76,24 +81,14 @@ Rules:
       }
     });
 
-    const rawText = response.text;
-    if (!rawText) throw new Error("مدل پاسخی ارسال نکرد.");
+    const cleanedText = cleanJsonResponse(response.text || "");
+    const parsed = JSON.parse(cleanedText);
 
-    const jsonString = extractJsonArray(rawText);
-    const parsed = JSON.parse(jsonString);
-
-    if (!Array.isArray(parsed)) {
-      throw new Error("فرمت پاسخ دریافتی نامعتبر است.");
-    }
-
+    if (!Array.isArray(parsed)) throw new Error("Invalid format");
     return parsed as Question[];
   } catch (error: any) {
     console.error("AI Generation Error:", error);
-    // ارسال پیام خطای دقیق‌تر به کاربر
-    if (error.message?.includes("Unexpected token")) {
-      throw new Error("خطا در پردازش داده‌های هوش مصنوعی. لطفاً تعداد سوالات را کمتر کرده و دوباره تلاش کنید.");
-    }
-    throw new Error(error.message || "خطای ناشناخته در طراحی سوال.");
+    throw new Error("متأسفانه تولید سوال با خطا مواجه شد. لطفاً حجم متن را کمتر کرده یا تعداد سوالات را کاهش دهید.");
   }
 };
 
@@ -102,7 +97,7 @@ export const getDeepExplanation = async (question: string, answer: string, lang:
   try {
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',
-      contents: `Explain simply in ${LANG_NAMES[lang]} why "${answer}" is correct for: "${question}".`,
+      contents: `Explain why "${answer}" is correct for: "${question}" in ${LANG_NAMES[lang]}. Keep it short and academic.`,
     });
     return response.text || "توضیحی یافت نشد.";
   } catch (error) {
