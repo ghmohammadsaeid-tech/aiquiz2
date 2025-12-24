@@ -23,7 +23,12 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
   const [licenseKey, setLicenseKey] = useState('');
   const [deviceId, setDeviceId] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  
+  // لود کردن وضعیت ادمین از LocalStorage برای جلوگیری از ناپدید شدن
+  const [isAdmin, setIsAdmin] = useState(() => {
+    return localStorage.getItem('az_is_admin') === 'true';
+  });
+
   const [targetId, setTargetId] = useState('');
   const [generatedKey, setGeneratedKey] = useState('');
   const [adSettings, setAdSettings] = useState(() => {
@@ -32,7 +37,6 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
   });
 
   useEffect(() => {
-    // ایجاد یک اثر انگشت نیمه‌سخت‌افزاری برای پایداری بیشتر در یک مرورگر
     const getFingerprint = () => {
         const nav = window.navigator;
         const screen = window.screen;
@@ -56,10 +60,18 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
   }, []);
 
   const verifyLicense = () => {
-    if (licenseKey === "GhAz6374") { setIsAdmin(true); setIsPremium(true); setLicenseKey(''); return; }
+    // کد ورود به مدیریت
+    if (licenseKey === "GhAz6374") { 
+        setIsAdmin(true); 
+        localStorage.setItem('az_is_admin', 'true');
+        setIsPremium(true); 
+        setLicenseKey(''); 
+        alert('حالت مدیریت فعال شد.');
+        return; 
+    }
+    
     setIsVerifying(true);
     setTimeout(() => {
-      // منطق ساده لایسنس: معکوس کردن بخش میانی ID + پسوند GOLD
       const parts = deviceId.split('-');
       const middlePart = parts[1] || "";
       const expected = middlePart.split('').reverse().join('').substring(0, 6).toUpperCase() + "-GOLD";
@@ -73,6 +85,13 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
       else alert('کد لایسنس اشتباه است. لطفاً با پشتیبانی تماس بگیرید.');
       setIsVerifying(false);
     }, 800);
+  };
+
+  const logoutAdmin = () => {
+    if(window.confirm('آیا می‌خواهید از حالت مدیریت خارج شوید؟ (پنل مدیریت مخفی خواهد شد)')) {
+        setIsAdmin(false);
+        localStorage.removeItem('az_is_admin');
+    }
   };
 
   const copyId = () => {
@@ -98,10 +117,13 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
       </div>
 
       {isAdmin && (
-        <div className="bg-slate-900 border-4 border-amber-500 rounded-[3rem] p-8 text-white space-y-8 shadow-2xl animate-slide-up">
+        <div className="bg-slate-900 border-4 border-amber-500 rounded-[3rem] p-8 text-white space-y-8 shadow-2xl animate-slide-up relative">
             <div className="flex justify-between items-center border-b border-white/10 pb-4">
-                <span className="text-[10px] bg-amber-500 text-slate-900 px-2 py-1 rounded-lg font-black">ADMIN ACCESS</span>
-                <h3 className="text-xl font-black text-amber-400">مرکز کنترل ابری مدیر</h3>
+                <button onClick={logoutAdmin} className="text-[10px] bg-rose-600 text-white px-3 py-1.5 rounded-lg font-black hover:bg-rose-700 transition-colors">خروج از پنل مدیر</button>
+                <div className="flex items-center gap-2 flex-row-reverse">
+                    <span className="text-[10px] bg-amber-500 text-slate-900 px-2 py-1 rounded-lg font-black">ADMIN ACCESS</span>
+                    <h3 className="text-xl font-black text-amber-400">مرکز کنترل ابری مدیر</h3>
+                </div>
             </div>
             <div className="space-y-6">
                 <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
