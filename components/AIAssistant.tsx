@@ -23,7 +23,7 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
   const [preview, setPreview] = useState<Question[]>([]);
   const [qTypes, setQTypes] = useState<string[]>(['mcq']);
 
-  // پارامترهای مخصوص پرامپت طلایی دستی
+  // پارامترهای مخصوص پرامپت طلایی
   const [manualTopic, setManualTopic] = useState('');
   const [manualCount, setManualCount] = useState(20);
   const [manualDiff, setManualDiff] = useState('متوسط');
@@ -41,23 +41,22 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
 ۱. تنوع موضوعی: سوالات را به ۵ بخش تقسیم کن تا تمام جنبه‌های موضوع را پوشش دهد.
 ۲. فرمت خروجی: خروجی نهایی باید فقط و فقط در قالب JSON فشرده باشد تا در برنامه‌نویسی قابل استفاده باشد.
 ۳. ساختار هر سوال در JSON:
-- id: شماره سوال
 - q: متن سوال (کوتاه و دقیق)
 - o: آرایه‌ای شامل ۴ گزینه
 - a: ایندکس گزینه صحیح (۰ تا ۳)
 - c: نام دسته‌بندی یا بخش مربوطه
+- difficulty: سطح دشواری
 
 ۴. زبان: تمام محتوا باید به زبان فارسی باشد.
 ۵. نحوه ارائه: به دلیل محدودیت کاراکتر، سوالات را در پارت‌های ۵۰ تایی برای من ارسال کن. هر وقت پارت اول را فرستادی، منتظر تایید من بمان و بعد پارت بعدی را بفرست.
 
-موضوع مورد نظر من این است: [${manualTopic || 'نام موضوع خود را اینجا بنویسید'}]
-سطح دشواری مورد نظر: [${manualDiff}]
-تعداد کل سوالات مورد نیاز: [${manualCount}]`;
+موضوع مورد نظر: [${manualTopic || 'نام موضوع خود را اینجا بنویسید'}]
+سطح دشواری: [${manualDiff}]`;
   };
 
   const handleManualCountChange = (val: number) => {
     if ((val === 50 || val === 100) && !isPremium) {
-      if (window.confirm('طراحی ۵۰ یا ۱۰۰ سوال مخصوص کاربران طلایی است. مایل به ارتقای حساب خود هستید؟')) {
+      if (window.confirm(t('ai.premium.lock'))) {
         setView('settings');
       }
       return;
@@ -66,8 +65,8 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
   };
 
   const handleGenerate = async () => {
-    if (method === 'topic' && !topic) return alert('لطفاً موضوع را وارد کنید');
-    if (method === 'text' && !sourceText) return alert('لطفاً متن را وارد کنید');
+    if (method === 'topic' && !topic) return alert(t('ai.topic') + ' را وارد کنید');
+    if (method === 'text' && !sourceText) return alert(t('ai.method.text') + ' را وارد کنید');
     
     setLoading(true);
     setPreview([]);
@@ -89,7 +88,7 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
         throw new Error("پاسخ دریافتی خالی بود.");
       }
     } catch (err: any) {
-      alert(err.message || "خطا در طراحی سوال. لطفاً دوباره تلاش کنید.");
+      alert(err.message || "خطا در طراحی سوال.");
     } finally {
       setLoading(false);
     }
@@ -99,11 +98,11 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
     try {
       const start = manualJson.indexOf('[');
       const end = manualJson.lastIndexOf(']');
-      if (start === -1 || end === -1) throw new Error("فرمت JSON نامعتبر است. کد باید بین [ و ] باشد.");
+      if (start === -1 || end === -1) throw new Error("فرمت JSON نامعتبر است.");
       const parsed = JSON.parse(manualJson.substring(start, end + 1));
       if (Array.isArray(parsed)) {
         setPreview(parsed);
-        alert(`${parsed.length} سوال شناسایی شد. اکنون می‌توانید آن‌ها را ذخیره کنید.`);
+        alert(`${parsed.length} سوال شناسایی شد.`);
       }
     } catch (e: any) {
       alert("خطا در تحلیل کد: " + e.message);
@@ -116,17 +115,17 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
         return;
     }
     navigator.clipboard.writeText(getGoldenPromptText());
-    alert("پرامپت طلایی کپی شد! اکنون آن را در ChatGPT یا DeepSeek بچسبانید.");
+    alert("پرامپت طلایی کپی شد! ✅");
   };
 
   return (
     <div className="max-w-5xl mx-auto space-y-6 pb-24 text-right animate-fade-in px-2">
-      {/* Tab Selector */}
+      {/* Header Selector */}
       <div className="bg-white dark:bg-slate-800 p-4 rounded-[2rem] border-[3px] border-black dark:border-white flex flex-col md:flex-row-reverse items-center justify-between gap-4">
           <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl gap-1 w-full md:w-auto border-2 border-black/10">
-              <button onClick={() => setMethod('text')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-[11px] font-black transition-all ${method === 'text' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400'}`}>تبدیل متن 📄</button>
-              <button onClick={() => setMethod('topic')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-[11px] font-black transition-all ${method === 'topic' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400'}`}>طراحی با AI ✨</button>
-              <button onClick={() => setMethod('manual')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-[11px] font-black transition-all ${method === 'manual' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400'}`}>تولید دستی 🛠️</button>
+              <button onClick={() => setMethod('text')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-[11px] font-black transition-all ${method === 'text' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400'}`}>{t('ai.method.text')}</button>
+              <button onClick={() => setMethod('topic')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-[11px] font-black transition-all ${method === 'topic' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400'}`}>{t('ai.method.topic')}</button>
+              <button onClick={() => setMethod('manual')} className={`flex-1 md:flex-none px-6 py-2 rounded-lg text-[11px] font-black transition-all ${method === 'manual' ? 'bg-white dark:bg-slate-800 text-indigo-600 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]' : 'text-slate-400'}`}>{t('ai.method.manual')}</button>
           </div>
           <div className="hidden md:flex items-center gap-2 flex-row-reverse">
              <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Generator Mode</span>
@@ -138,22 +137,22 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
         <div className="bg-white dark:bg-slate-800 p-6 md:p-10 rounded-[3rem] border-[4px] border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] h-full">
             {method === 'manual' ? (
                 <div className="space-y-10">
-                    {/* Step 1: Configuration */}
+                    {/* Step 1 */}
                     <div className="flex flex-col md:flex-row-reverse justify-between items-start gap-6 border-b-4 border-slate-100 dark:border-slate-700 pb-8">
                         <div className="text-right">
                             <h3 className="text-2xl font-black dark:text-white mb-2 flex items-center gap-3 flex-row-reverse">
                                 <span className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center text-sm">۱</span>
-                                تنظیمات آزمون خارجی
+                                {t('ai.manual.step1')}
                             </h3>
-                            <p className="text-xs text-slate-500 font-bold">مشخصات آزمون را برای تولید پرامپت وارد کنید.</p>
+                            <p className="text-[11px] text-slate-400 font-bold">{t('ai.manual.step1.desc')}</p>
                         </div>
                         <div className="flex flex-wrap gap-3 justify-center md:justify-end w-full md:w-auto">
                             <div className="flex flex-col gap-1 flex-1 min-w-[150px]">
-                                <label className="text-[9px] font-black text-slate-400 px-2 uppercase">موضوع آزمون</label>
+                                <label className="text-[9px] font-black text-slate-400 px-2 uppercase">{t('ai.topic')}</label>
                                 <input type="text" value={manualTopic} onChange={(e) => setManualTopic(e.target.value)} placeholder="مثلاً: حقوق جزا" className="px-4 py-3 bg-slate-50 dark:bg-slate-900 border-2 border-black rounded-xl text-xs font-black outline-none focus:bg-amber-50" />
                             </div>
                             <div className="flex flex-col gap-1">
-                                <label className="text-[9px] font-black text-slate-400 px-2 uppercase">تعداد</label>
+                                <label className="text-[9px] font-black text-slate-400 px-2 uppercase">{t('ai.count')}</label>
                                 <select value={manualCount} onChange={(e) => handleManualCountChange(Number(e.target.value))} className="px-4 py-3 bg-slate-50 dark:bg-slate-900 border-2 border-black rounded-xl text-xs font-black outline-none">
                                     <option value={10}>۱۰ سوال</option>
                                     <option value={20}>۲۰ سوال</option>
@@ -162,7 +161,7 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
                                 </select>
                             </div>
                             <div className="flex flex-col gap-1">
-                                <label className="text-[9px] font-black text-slate-400 px-2 uppercase">سختی</label>
+                                <label className="text-[9px] font-black text-slate-400 px-2 uppercase">{t('ai.difficulty')}</label>
                                 <select value={manualDiff} onChange={(e) => setManualDiff(e.target.value)} className="px-4 py-3 bg-slate-50 dark:bg-slate-900 border-2 border-black rounded-xl text-xs font-black outline-none">
                                     <option>آسان</option><option>متوسط</option><option>سخت</option>
                                 </select>
@@ -171,46 +170,42 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                        {/* Step 2: Golden Prompt */}
+                        {/* Step 2 */}
                         <div className="space-y-6">
                             <div className="bg-amber-50 dark:bg-amber-900/20 p-6 rounded-[2.5rem] border-2 border-amber-400 space-y-4">
                                 <div className="flex justify-between items-center flex-row-reverse">
                                     <h4 className="text-xs font-black text-amber-700 dark:text-amber-300 uppercase flex items-center gap-2">
                                         <span className="w-6 h-6 bg-amber-400 text-black rounded-md flex items-center justify-center text-[10px]">۲</span>
-                                        پرامپت طلایی آماده کپی
+                                        {t('ai.manual.step2')}
                                     </h4>
                                     <button onClick={copyPromptToClipboard} className="px-4 py-2 bg-slate-900 text-white border-2 border-black rounded-lg text-[10px] font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:scale-95 transition-all">
-                                        <i className="fa-solid fa-copy mr-1"></i> کپی متن
+                                        <i className="fa-solid fa-copy mr-1"></i> {t('ai.manual.copy')}
                                     </button>
                                 </div>
                                 <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border-2 border-black/10 text-[10px] font-bold text-slate-600 dark:text-slate-400 leading-relaxed h-56 overflow-y-auto custom-scrollbar text-right">
                                     {getGoldenPromptText()}
                                 </div>
-                            </div>
-                            <div className="p-4 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl border-2 border-dashed border-indigo-200 text-center">
-                                <p className="text-[10px] font-bold text-indigo-600 dark:text-indigo-300">
-                                    🚀 راهنما: پرامپت را کپی کرده و در چت‌بات‌هایی مثل <span className="font-black">ChatGPT</span> یا <span className="font-black">DeepSeek</span> بفرستید.
-                                </p>
+                                <p className="text-[10px] text-amber-600 font-bold text-center italic">{t('ai.manual.step2.desc')}</p>
                             </div>
                         </div>
 
-                        {/* Step 3: Result Import */}
+                        {/* Step 3 */}
                         <div className="space-y-6">
                             <div className="text-right">
                                 <h3 className="text-2xl font-black dark:text-white mb-2 flex items-center gap-3 flex-row-reverse">
                                     <span className="w-10 h-10 bg-black text-white rounded-xl flex items-center justify-center text-sm">۳</span>
-                                    درون‌ریزی کد نهایی
+                                    {t('ai.manual.step3')}
                                 </h3>
-                                <p className="text-xs text-slate-500 font-bold">کد JSON دریافتی را در کادر زیر بچسبانید.</p>
+                                <p className="text-[11px] text-slate-400 font-bold mb-4">{t('ai.manual.step3.desc')}</p>
                             </div>
                             <textarea 
                               value={manualJson} 
                               onChange={(e) => setManualJson(e.target.value)} 
-                              placeholder="کد JSON را اینجا Paste کنید..." 
+                              placeholder={t('ai.manual.placeholder')} 
                               className="w-full h-56 p-5 bg-slate-50 dark:bg-slate-900 border-[3px] border-black rounded-[2rem] outline-none text-[11px] font-mono text-indigo-500 focus:bg-white transition-all shadow-inner" 
                             />
                             <button onClick={handleManualImport} className="w-full py-6 bg-emerald-500 text-white rounded-[1.5rem] font-black text-xl border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">
-                                تایید و استخراج سوالات 🚀
+                                {t('ai.manual.import')} 🚀
                             </button>
                         </div>
                     </div>
@@ -220,9 +215,9 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
                     <div className="flex flex-col md:flex-row-reverse justify-between items-center gap-4">
                         <div className="text-right">
                             <h3 className="text-3xl font-black dark:text-white italic">
-                                {method === 'text' ? 'تحلیل و استخراج 📄' : 'طراحی موضوعی ✨'}
+                                {method === 'text' ? t('ai.method.text') : t('ai.method.topic')}
                             </h3>
-                            <p className="text-sm text-slate-500 font-bold mt-1">طراحی با هوش مصنوعی {selectedEngine}</p>
+                            <p className="text-sm text-slate-500 font-bold mt-1">AI Engine: {selectedEngine}</p>
                         </div>
                         <div className="flex bg-slate-100 dark:bg-slate-900 p-1 rounded-xl gap-1 border-2 border-black/10">
                             {ENGINES.map(e => (
@@ -238,16 +233,16 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
                             {method === 'text' ? (
                                 <textarea value={sourceText} onChange={(e) => setSourceText(e.target.value)} placeholder="متن جزوه یا کتاب خود را اینجا قرار دهید..." className="w-full h-80 p-8 bg-slate-50 dark:bg-slate-900 border-[3px] border-black rounded-[2.5rem] outline-none text-[14px] font-bold leading-relaxed focus:bg-white shadow-inner" />
                             ) : (
-                                <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="موضوع آزمون را بنویسید (مثلاً: زیست‌شناسی سلولی)" className="w-full p-8 bg-slate-50 dark:bg-slate-900 border-[3px] border-black rounded-[2rem] outline-none font-black text-xl focus:bg-white" />
+                                <input type="text" value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="موضوع آزمون را بنویسید (مثلاً: زیست‌شناسی)" className="w-full p-8 bg-slate-50 dark:bg-slate-900 border-[3px] border-black rounded-[2rem] outline-none font-black text-xl focus:bg-white" />
                             )}
                         </div>
                         <div className="lg:col-span-1 space-y-6">
                             <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-[2rem] border-[3px] border-black space-y-4">
-                                <label className="text-[10px] font-black text-slate-400 block uppercase">تعداد سوالات</label>
+                                <label className="text-[10px] font-black text-slate-400 block uppercase">{t('ai.count')}</label>
                                 <select value={count} onChange={(e) => {
                                   const val = Number(e.target.value);
                                   if ((val === 50 || val === 100) && !isPremium) {
-                                      if (window.confirm('طراحی ۵۰ یا ۱۰۰ سوال مخصوص کاربران طلایی است. مایل به ارتقای حساب خود هستید؟')) setView('settings');
+                                      if (window.confirm(t('ai.premium.lock'))) setView('settings');
                                       return;
                                   }
                                   setCount(val);
@@ -258,7 +253,7 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
                                     <option value={50}>۵۰ سوال {!isPremium && '🔒'}</option>
                                     <option value={100}>۱۰۰ سوال {!isPremium && '🔒'}</option>
                                 </select>
-                                <label className="text-[10px] font-black text-slate-400 block uppercase mt-4">سطح دشواری</label>
+                                <label className="text-[10px] font-black text-slate-400 block uppercase mt-4">{t('ai.difficulty')}</label>
                                 <select value={difficulty} onChange={(e) => setDifficulty(e.target.value)} className="w-full p-3 bg-white dark:bg-slate-800 border-2 border-black rounded-xl font-black text-sm outline-none">
                                     <option>آسان</option><option>متوسط</option><option>سخت</option>
                                 </select>
@@ -268,7 +263,7 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
 
                     <button onClick={handleGenerate} disabled={loading} className="w-full py-8 bg-indigo-600 text-white rounded-[2.5rem] font-black text-2xl border-[4px] border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-4">
                         {loading ? <i className="fa-solid fa-spinner fa-spin"></i> : <i className="fa-solid fa-wand-magic-sparkles"></i>}
-                        {loading ? 'در حال تفکر هوش مصنوعی...' : 'طراحی آنی سوالات'}
+                        {loading ? 'Processing...' : t('ai.generate')}
                     </button>
                 </div>
             )}
@@ -278,14 +273,14 @@ const AIAssistant: React.FC<Props> = ({ setQuestions, t, isPremium, setView, lan
       {preview.length > 0 && (
         <div className="bg-emerald-50 dark:bg-emerald-950/20 p-8 rounded-[3rem] border-[4px] border-black shadow-[12px_12px_0px_0px_rgba(16,185,129,1)] animate-slide-up">
           <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 flex-row-reverse">
-              <h4 className="text-2xl font-black text-emerald-800 dark:text-emerald-300">آماده ذخیره ({preview.length} سوال)</h4>
+              <h4 className="text-2xl font-black text-emerald-800 dark:text-emerald-300">({preview.length}) {t('nav.bank')}</h4>
               <div className="flex gap-3 w-full md:w-auto">
-                <button onClick={() => setPreview([])} className="flex-1 px-6 py-3 bg-white dark:bg-slate-800 text-rose-500 rounded-xl font-black text-xs border-2 border-black">انصراف</button>
+                <button onClick={() => setPreview([])} className="flex-1 px-6 py-3 bg-white dark:bg-slate-800 text-rose-500 rounded-xl font-black text-xs border-2 border-black">{t('common.cancel')}</button>
                 <button onClick={() => {
                     setQuestions(prev => [...prev, ...preview.map(q => ({ ...q, id: Date.now() + Math.random(), dateAdded: new Date().toISOString() })) as any]);
                     setPreview([]);
                     setView('bank');
-                }} className="flex-[2] px-10 py-3 bg-emerald-500 text-white rounded-xl font-black text-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">ذخیره در بانک سوالات 📥</button>
+                }} className="flex-[2] px-10 py-3 bg-emerald-500 text-white rounded-xl font-black text-sm border-2 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">{t('common.save')}</button>
               </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
