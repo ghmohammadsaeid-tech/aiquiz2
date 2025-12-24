@@ -23,6 +23,13 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
     return filter === 'all' ? questions : questions.filter(q => q.c === filter);
   }, [questions, filter]);
 
+  // لیستی از سوالاتی که باید چاپ شوند (با حفظ ترتیب انتخاب یا فیلتر)
+  const questionsToPrint = useMemo(() => {
+    if (selectedIds.length === 0) return filteredQuestions;
+    // برگرداندن سوالات بر اساس ایدی‌های انتخاب شده
+    return questions.filter((_, idx) => selectedIds.includes(idx));
+  }, [questions, selectedIds, filteredQuestions]);
+
   const toggleSelect = (globalIdx: number) => {
     setSelectedIds(prev => 
       prev.includes(globalIdx) ? prev.filter(id => id !== globalIdx) : [...prev, globalIdx]
@@ -94,32 +101,32 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
     <div className="space-y-6 animate-fade-in">
       <style>{`
         @media print {
-          @page { size: A4; margin: 10mm 15mm; }
+          @page { size: A4; margin: 10mm 12mm; }
           body { background: white !important; font-size: 10pt !important; color: black !important; }
           .no-print { display: none !important; }
           .question-card { 
             border: none !important; 
             box-shadow: none !important; 
-            margin-bottom: 15pt !important; 
+            margin-bottom: 12pt !important; 
             padding: 0 !important;
             break-inside: avoid;
             page-break-inside: avoid;
           }
           .option-box { 
-            padding: 3pt 8pt !important; 
-            border: 1px solid #333 !important; 
-            font-size: 9.5pt !important;
+            padding: 2.5pt 6pt !important; 
+            border: 1px solid #000 !important; 
+            font-size: 9pt !important;
             background: none !important;
-            margin-top: 2pt !important;
+            margin-top: 1.5pt !important;
           }
           .exam-header {
             border: 2px solid #000 !important;
-            padding: 8pt !important;
-            margin-bottom: 20pt !important;
-            border-radius: 4px;
+            padding: 6pt !important;
+            margin-bottom: 12pt !important;
+            border-radius: 2px;
           }
-          .q-text { font-size: 11pt !important; font-weight: bold !important; margin-bottom: 5pt !important; line-height: 1.4; }
-          .answer-key-section { break-before: page; margin-top: 30pt; }
+          .q-text { font-size: 10.5pt !important; font-weight: bold !important; margin-bottom: 4pt !important; line-height: 1.3; }
+          .answer-key-section { break-before: page; margin-top: 20pt; }
           .print-label { font-weight: 900; }
         }
       `}</style>
@@ -127,25 +134,25 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
       {/* Professional Exam Print Header */}
       <div className="hidden print:block text-black">
         <div className="exam-header relative text-right">
-            <div className="flex justify-between items-start flex-row-reverse mb-3">
-                <div className="space-y-1 text-[9pt]">
+            <div className="flex justify-between items-start flex-row-reverse mb-2">
+                <div className="space-y-0.5 text-[8pt]">
                     <p><span className="print-label">تاریخ آزمون:</span> ...................</p>
-                    <p><span className="print-label">مدت پاسخگویی:</span> ...................</p>
+                    <p><span className="print-label">مدت زمان:</span> ...................</p>
                 </div>
                 <div className="text-center">
-                    <h1 className="text-sm font-black mb-1">باسمه تعالی</h1>
-                    <h2 className="text-lg font-black italic">برگه سوالات آزمون کلاسی</h2>
+                    <h1 className="text-[10pt] font-black mb-0.5">باسمه تعالی</h1>
+                    <h2 className="text-[12pt] font-black italic">برگه رسمی سوالات آزمون</h2>
                 </div>
-                <div className="text-left text-[8pt]">
+                <div className="text-left text-[8pt] min-w-[60px]">
                     <p>نمره: .........</p>
                 </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 border-t border-black pt-2 mb-2">
-                <div className="text-[10pt]"><span className="print-label">نام و نام خانوادگی دانشجو:</span> .......................................</div>
-                <div className="text-[10pt]"><span className="print-label">نام درس/موضوع:</span> {filter === 'all' ? 'آزمون جامع' : filter}</div>
+            <div className="grid grid-cols-2 gap-4 border-t border-black pt-1.5 mb-1.5">
+                <div className="text-[9pt]"><span className="print-label">نام و نام خانوادگی:</span> ...........................................</div>
+                <div className="text-[9pt]"><span className="print-label">موضوع/درس:</span> {filter === 'all' ? 'آزمون جامع' : filter}</div>
             </div>
-            <div className="text-[10pt] border-b border-black pb-2 mb-2">
+            <div className="text-[9pt] border-b border-black pb-1.5">
                 <span className="print-label">نام استاد:</span> ...........................................
             </div>
         </div>
@@ -162,7 +169,7 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
           </button>
           <div>
             <h2 className="text-3xl font-black text-slate-800 dark:text-white">بانک سوالات 📚</h2>
-            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">مدیریت و تولید آزمون کلاسی (نسخه اساتید)</p>
+            <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">مدیریت و تولید آزمون (شماره‌گذاری هوشمند)</p>
           </div>
         </div>
         
@@ -210,7 +217,7 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
                 <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center border-2 border-white shadow-[2px_2px_0px_0px_rgba(255,255,255,0.3)]">
                     <span className="text-xs font-black">{selectedIds.length}</span>
                 </div>
-                <span className="text-sm font-black italic">سوال در لیست چاپ</span>
+                <span className="text-sm font-black italic">سوال در لیست چاپ (ترتیب متوالی)</span>
               </div>
               <div className="flex gap-3 w-full sm:w-auto">
                   <button 
@@ -227,17 +234,16 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
           </div>
       )}
 
+      {/* لیست اصلی نمایش سوالات */}
       <div className="grid gap-6 print:block pb-10">
-          {filteredQuestions.length === 0 ? (
+          {(selectedIds.length > 0 ? questionsToPrint : filteredQuestions).length === 0 ? (
             <div className="py-20 text-center bg-white dark:bg-slate-800 rounded-[2.5rem] border-[3px] border-black border-dashed no-print">
                 <i className="fa-solid fa-folder-open text-4xl text-slate-300 mb-4"></i>
-                <p className="text-slate-400 font-black">بانک سوالات خالی است.</p>
+                <p className="text-slate-400 font-black">بانک سوالات خالی است یا موردی انتخاب نشده است.</p>
             </div>
-          ) : filteredQuestions.map((q, idx) => {
+          ) : (selectedIds.length > 0 ? questionsToPrint : filteredQuestions).map((q, idx) => {
               const globalIdx = questions.indexOf(q);
               const isSelected = selectedIds.includes(globalIdx);
-              
-              if (selectedIds.length > 0 && !isSelected) return null;
 
               return (
                   <div 
@@ -285,23 +291,19 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
         <div className="border-[2px] border-black p-6 rounded-xl">
             <h3 className="text-lg font-black mb-4 text-center text-black border-b border-black pb-2 italic">کلید آزمون (پاسخ‌نامه مدرس)</h3>
             <div className="grid grid-cols-5 gap-3">
-                {filteredQuestions.map((q, i) => {
-                    const globalIdx = questions.indexOf(q);
-                    if (selectedIds.length > 0 && !selectedIds.includes(globalIdx)) return null;
-                    return (
-                        <div key={i} className="text-[9pt] border border-black p-2 flex justify-between flex-row-reverse font-bold text-black rounded bg-slate-50">
-                            <span className="bg-black text-white w-5 h-5 rounded flex items-center justify-center ml-1">{i + 1}</span>
-                            <span>{String.fromCharCode(65 + q.a)}</span>
-                        </div>
-                    )
-                })}
+                {questionsToPrint.map((q, i) => (
+                    <div key={i} className="text-[9pt] border border-black p-2 flex justify-between flex-row-reverse font-bold text-black rounded bg-slate-50">
+                        <span className="bg-black text-white w-5 h-5 rounded flex items-center justify-center ml-1">{i + 1}</span>
+                        <span>{String.fromCharCode(65 + q.a)}</span>
+                    </div>
+                ))}
             </div>
             <div className="mt-10 flex justify-between items-end flex-row-reverse">
                 <div className="text-center">
                     <p className="font-bold text-[9pt] mb-8">مهر و امضا</p>
                     <div className="w-32 border-b border-black"></div>
                 </div>
-                <div className="text-[7pt] text-slate-400">Smart Exam Assistant Pro</div>
+                <div className="text-[7pt] text-slate-400">Smart Exam Assistant Pro - Sequential Numbering Active</div>
             </div>
         </div>
       </div>
