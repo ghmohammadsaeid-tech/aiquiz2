@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Question, View, ExamState, Language } from '../types';
+import { getDeepExplanation } from '../services/geminiService';
 
 interface Props {
   questions: Question[];
@@ -11,11 +12,13 @@ interface Props {
   dynamicAd: { title: string, desc: string, btn: string, url: string };
 }
 
-const Exam: React.FC<Props> = ({ questions, setView, t, isPremium, dynamicAd }) => {
+const Exam: React.FC<Props> = ({ questions, setView, t, isPremium, dynamicAd, lang }) => {
   const [exam, setExam] = useState<ExamState | null>(null);
   const [config, setConfig] = useState({ count: Math.min(20, questions.length), difficulty: 'all', randomize: true, showAnswers: true, hasTimer: true });
   const [showResult, setShowResult] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
+  const [deepStudyContent, setDeepStudyContent] = useState<string | null>(null);
+  const [isStudying, setIsStudying] = useState(false);
 
   useEffect(() => {
     let timer: any;
@@ -26,6 +29,18 @@ const Exam: React.FC<Props> = ({ questions, setView, t, isPremium, dynamicAd }) 
     }
     return () => clearInterval(timer);
   }, [exam?.active, timeLeft, config.hasTimer]);
+
+  const handleDeepStudy = async (q: Question) => {
+    setIsStudying(true);
+    try {
+        const res = await getDeepExplanation(q.q, q.o[q.a], lang);
+        setDeepStudyContent(res);
+    } catch (e) {
+        alert('خطا در دریافت تحلیل آموزشی.');
+    } finally {
+        setIsStudying(false);
+    }
+  };
 
   if (questions.length === 0) {
       return (
@@ -58,27 +73,28 @@ const Exam: React.FC<Props> = ({ questions, setView, t, isPremium, dynamicAd }) 
     const score = Math.round((correctCount / exam.questions.length) * 100);
 
     return (
-      <div className="max-w-2xl mx-auto space-y-6 animate-slide-up">
+      <div className="max-w-2xl mx-auto space-y-6 animate-slide-up pb-20">
         <div className="bg-white dark:bg-slate-800 p-10 rounded-[3rem] shadow-2xl border-4 border-slate-100 dark:border-slate-700 text-center">
             <div className={`w-32 h-32 mx-auto rounded-full flex items-center justify-center text-4xl font-black mb-8 border-[10px] ${score >= 50 ? 'border-emerald-500 text-emerald-600' : 'border-rose-500 text-rose-600'}`}>{score}%</div>
             <h2 className="text-3xl font-black mb-2 dark:text-white">نتیجه آزمون</h2>
-            
             <div className="grid grid-cols-3 gap-4 my-8">
                 <div className="p-4 bg-slate-100 dark:bg-slate-900 rounded-2xl text-slate-800 dark:text-white font-black">{exam.questions.length}<br/><span className="text-[10px] opacity-50">کل</span></div>
                 <div className="p-4 bg-emerald-50 dark:bg-emerald-900/30 rounded-2xl text-emerald-600 font-black">{correctCount}<br/><span className="text-[10px] opacity-50">صحیح</span></div>
                 <div className="p-4 bg-rose-50 dark:bg-rose-900/30 rounded-2xl text-rose-600 font-black">{exam.questions.length - correctCount}<br/><span className="text-[10px] opacity-50">غلط</span></div>
             </div>
 
-            {/* تبلیغ متغیر در نتیجه آزمون */}
+            {/* بنر تبلیغاتی سراسری در نتایج آزمون */}
             {!isPremium && (
-              <div className="mb-8 p-6 bg-indigo-50 dark:bg-indigo-950 border-2 border-indigo-100 dark:border-indigo-900 rounded-3xl text-right flex flex-col items-center gap-3">
-                <h4 className="text-sm font-black text-indigo-700 dark:text-indigo-300 flex items-center gap-2 flex-row-reverse">
-                  <i className="fa-solid fa-bullhorn"></i>
-                  {dynamicAd.title}
-                </h4>
-                <p className="text-[11px] text-indigo-600 dark:text-indigo-400 text-center font-bold">{dynamicAd.desc}</p>
-                <button onClick={() => dynamicAd.url !== "#" ? window.open(dynamicAd.url, '_blank') : setView('settings')} className="w-full py-2 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-md">{dynamicAd.btn}</button>
-              </div>
+                <div className="mb-8 p-6 bg-indigo-50 dark:bg-indigo-900/20 border-2 border-indigo-100 dark:border-indigo-900/30 rounded-3xl text-right flex flex-col items-center gap-3">
+                    <h4 className="text-sm font-black text-indigo-700 dark:text-indigo-400 flex items-center gap-2 flex-row-reverse">
+                      <i className="fa-solid fa-bullhorn"></i>
+                      {dynamicAd.title}
+                    </h4>
+                    <p className="text-[10px] text-indigo-600 dark:text-indigo-500 font-bold text-center">{dynamicAd.desc}</p>
+                    <button onClick={() => dynamicAd.url !== "#" ? window.open(dynamicAd.url, '_blank') : setView('settings')} className="w-full py-2.5 bg-indigo-600 text-white rounded-xl text-xs font-black shadow-lg">
+                      {dynamicAd.btn}
+                    </button>
+                </div>
             )}
 
             <div className="flex gap-4">
@@ -86,6 +102,44 @@ const Exam: React.FC<Props> = ({ questions, setView, t, isPremium, dynamicAd }) 
               <button onClick={() => { setExam(null); setShowResult(false); }} className="flex-[2] py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm shadow-xl">آزمون مجدد</button>
             </div>
         </div>
+
+        <div className="space-y-4">
+            <h3 className="font-black dark:text-white text-right pr-4">تحلیل پاسخ‌ها</h3>
+            {exam.questions.map((q, i) => (
+                <div key={i} className={`bg-white dark:bg-slate-800 p-6 rounded-3xl border text-right space-y-4 ${exam.answers[i] === q.a ? 'border-emerald-100' : 'border-rose-100'}`}>
+                    <p className="font-bold dark:text-white text-sm">{i+1}. {q.q}</p>
+                    <div className="flex justify-between items-center flex-row-reverse">
+                        <span className={`text-xs font-black ${exam.answers[i] === q.a ? 'text-emerald-500' : 'text-rose-500'}`}>
+                            {exam.answers[i] === q.a ? '✓ صحیح' : `✗ غلط (پاسخ: ${q.o[q.a]})`}
+                        </span>
+                        <button onClick={() => handleDeepStudy(q)} className="px-4 py-2 bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-400 rounded-xl text-[10px] font-black flex items-center gap-2 transition-all hover:scale-105 active:scale-95">
+                             <i className="fa-solid fa-graduation-cap"></i> مطالعه عمیق با AI
+                        </button>
+                    </div>
+                </div>
+            ))}
+        </div>
+
+        {deepStudyContent && (
+            <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white dark:bg-slate-900 w-full max-w-2xl rounded-[2.5rem] p-8 shadow-2xl animate-scale-up max-h-[80vh] overflow-y-auto relative text-right">
+                    <button onClick={() => setDeepStudyContent(null)} className="absolute top-6 left-6 w-10 h-10 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-500"><i className="fa-solid fa-xmark"></i></button>
+                    <h4 className="text-xl font-black mb-6 text-indigo-600 flex items-center gap-3 flex-row-reverse"><i className="fa-solid fa-brain"></i> تحلیل هوشمند آموزشی</h4>
+                    <div className="prose dark:prose-invert max-w-none text-sm leading-relaxed font-medium text-slate-700 dark:text-slate-300 whitespace-pre-line">
+                        {deepStudyContent}
+                    </div>
+                </div>
+            </div>
+        )}
+
+        {isStudying && (
+            <div className="fixed inset-0 z-[100] bg-black/20 backdrop-blur-xs flex items-center justify-center">
+                <div className="bg-white dark:bg-slate-800 px-8 py-4 rounded-2xl shadow-2xl flex items-center gap-4 flex-row-reverse">
+                    <i className="fa-solid fa-circle-notch fa-spin text-indigo-600 text-2xl"></i>
+                    <span className="font-black text-xs dark:text-white">در حال تحلیل هوشمند...</span>
+                </div>
+            </div>
+        )}
       </div>
     );
   }
@@ -96,7 +150,10 @@ const Exam: React.FC<Props> = ({ questions, setView, t, isPremium, dynamicAd }) 
       <div className="max-w-4xl mx-auto space-y-6 animate-fade-in">
         <div className="bg-white dark:bg-slate-800 p-5 rounded-[2rem] border-2 dark:border-slate-700 shadow-lg flex items-center justify-between sticky top-4 z-40">
             <span className="text-sm font-black dark:text-white">سوال {exam.currentQuestion + 1} از {exam.questions.length}</span>
-            <button onClick={() => setView('dashboard')} className="text-xs font-black text-rose-500">انصراف</button>
+            <div className="flex items-center gap-4">
+                 {config.hasTimer && <span className={`text-xs font-black ${timeLeft < 30 ? 'text-rose-500 animate-pulse' : 'text-slate-400'}`}><i className="fa-solid fa-clock mr-1"></i> {Math.floor(timeLeft / 60)}:{String(timeLeft % 60).padStart(2, '0')}</span>}
+                 <button onClick={() => setView('dashboard')} className="text-xs font-black text-rose-500">انصراف</button>
+            </div>
         </div>
         <div className="bg-white dark:bg-slate-800 p-8 md:p-12 rounded-[3rem] border-4 border-slate-100 dark:border-slate-700 shadow-2xl text-right">
           <h2 className="text-xl md:text-2xl font-black dark:text-white mb-10 leading-relaxed">{q.q}</h2>

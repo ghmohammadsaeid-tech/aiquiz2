@@ -19,10 +19,6 @@ interface Props {
   setView: (v: View) => void;
 }
 
-/**
- * الگوریتم تولید لایسنس سخت‌افزاری (Hardware-Bound)
- * این تابع فقط یک خروجی صحیح برای هر Device ID دارد.
- */
 const generateSecureLicense = (deviceId: string) => {
     const secretSalt = "AZM_ULTRA_SECURE_2025_V2";
     let hash = 0;
@@ -31,19 +27,15 @@ const generateSecureLicense = (deviceId: string) => {
         hash = ((hash << 5) - hash) + combined.charCodeAt(i);
         hash |= 0;
     }
-    
     const absHash = Math.abs(hash);
     const hex = absHash.toString(16).toUpperCase().padStart(8, '0');
-    
-    // فرمت لایسنس: AZM-XXXX-YYYY-ZZ (کاملا منحصر به فرد)
     const p1 = hex.slice(0, 4);
     const p2 = hex.slice(4, 8);
     const p3 = (absHash % 99).toString().padStart(2, '0');
-    
     return `AZM-${p1}-${p2}-${p3}`;
 };
 
-const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkMode, setView }) => {
+const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkMode, setView, lang, setLang, t }) => {
   const [licenseKey, setLicenseKey] = useState('');
   const [deviceId, setDeviceId] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -54,15 +46,21 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
 
   const [targetId, setTargetId] = useState('');
   const [generatedKey, setGeneratedKey] = useState('');
-  const [adSettings, setAdSettings] = useState(() => {
+  
+  const [adForm, setAdForm] = useState(() => {
     const saved = localStorage.getItem('az_manager_ad');
-    return saved ? JSON.parse(saved) : { title: "🚀 پیشنهاد ویژه: اشتراک طلایی", desc: "دسترسی نامحدود به هوشمندترین ابزار یادگیری!", btn: "ارتقا به VIP", remoteUrl: "" };
+    return saved ? JSON.parse(saved) : { 
+      title: "🚀 پیشنهاد ویژه: اشتراک طلایی", 
+      desc: "دسترسی نامحدود به هوشمندترین ابزار یادگیری!", 
+      btn: "ارتقا به VIP", 
+      url: "#",
+      remoteUrl: "" 
+    };
   });
 
   useEffect(() => {
     const getDeepFingerprint = () => {
         try {
-            // ۱. اثر انگشت گرافیکی (Canvas)
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             let canvasHash = "0";
@@ -75,153 +73,213 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
                     canvasHash = (parseInt(canvasHash) + b64.charCodeAt(i)).toString();
                 }
             }
-
-            // ۲. شناسایی کارت گرافیک (WebGL Renderer) - بسیار دقیق برای تفکیک دستگاه‌ها
             const gl = canvas.getContext('webgl');
             let gpu = "unknown-gpu";
             if (gl) {
                 const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-                if (debugInfo) {
-                    gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
-                }
+                if (debugInfo) gpu = gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL);
             }
-
-            // ۳. مشخصات سیستمی
             const nav = window.navigator;
             const screen = window.screen;
             const coreData = `${gpu}-${nav.hardwareConcurrency}-${screen.width}x${screen.height}-${screen.colorDepth}`;
-            
-            // تولید هش نهایی
             let finalHash = 0;
             const rawId = coreData + canvasHash;
             for (let i = 0; i < rawId.length; i++) {
                 finalHash = ((finalHash << 5) - finalHash) + rawId.charCodeAt(i);
                 finalHash |= 0;
             }
-
             return `HW-${Math.abs(finalHash).toString(36).toUpperCase()}`;
         } catch (e) {
             return "ID-" + Math.random().toString(36).substr(2, 9).toUpperCase();
         }
     };
-
     const id = getDeepFingerprint();
     setDeviceId(id);
-    localStorage.setItem('az_device_id', id);
-    
     if (localStorage.getItem('isPremium') === 'true') setIsPremium(true);
   }, [setIsPremium]);
 
+  const saveAdSettings = () => {
+    localStorage.setItem('az_manager_ad', JSON.stringify(adForm));
+    alert('✅ تبلیغ جدید با موفقیت ذخیره شد.');
+  };
+
+  const handleCopyAndSupport = () => {
+    navigator.clipboard.writeText(deviceId);
+    // باز کردن تلگرام پشتیبانی (لینک نمونه)
+    const supportUrl = "https://t.me/azmonyar_admin"; 
+    alert('✅ شناسه دستگاه کپی شد. اکنون به پشتیبانی هدایت می‌شوید تا کد را ارسال کنید.');
+    window.open(supportUrl, '_blank');
+  };
+
   const verifyLicense = () => {
     const inputKey = licenseKey.trim();
-
-    // ورود مدیر
     if (inputKey === "GhAz6374") { 
         setIsAdmin(true); 
         localStorage.setItem('az_is_admin', 'true');
         setIsPremium(true); 
-        setLicenseKey(''); 
-        alert('مدیریت فعال شد.');
+        alert('حالت مدیریت فعال شد.');
         return; 
     }
-    
     setIsVerifying(true);
     setTimeout(() => {
       const expected = generateSecureLicense(deviceId);
-      // مقایسه لایسنس ورودی با لایسنس اختصاصی این دستگاه
       if (inputKey.toUpperCase() === expected.toUpperCase()) { 
           setIsPremium(true); 
           localStorage.setItem('isPremium', 'true'); 
-          alert('لایسنس اختصاصی این دستگاه تایید شد. ✨');
+          alert('لایسنس با موفقیت فعال شد! ✨');
           setView('dashboard'); 
-      }
-      else {
-          alert('خطا: این لایسنس برای دستگاه شما معتبر نیست. لایسنس‌ها به سخت‌افزار دستگاه حساس هستند.');
+      } else {
+          alert('لایسنس اشتباه است.');
       }
       setIsVerifying(false);
-    }, 1500);
+    }, 1200);
   };
 
   const logoutAdmin = () => {
-    if(window.confirm('خروج از مدیریت؟')) {
+    if(window.confirm('خروج از پنل مدیریت؟')) {
         setIsAdmin(false);
         localStorage.removeItem('az_is_admin');
     }
   };
 
+  const languages = [
+    { id: 'fa', label: 'فارسی', flag: '🇮🇷' },
+    { id: 'en', label: 'English', flag: '🇺🇸' },
+    { id: 'ku', label: 'کوردی', flag: '☀️' },
+    { id: 'ar', label: 'العربية', flag: '🇸🇦' }
+  ];
+
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-24 text-right">
-      <div className="flex justify-between items-center mb-4">
-          <button onClick={() => setView('dashboard')} className="px-6 py-2.5 bg-white dark:bg-slate-800 rounded-xl text-xs font-black shadow-lg border dark:border-slate-700 flex items-center gap-2">بازگشت</button>
-          <div className="flex items-center gap-4 flex-row-reverse">
-            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-white bg-indigo-600 shadow-lg`}><i className="fa-solid fa-microchip"></i></div>
-            <h2 className="text-2xl font-black dark:text-white">قفل سخت‌افزاری</h2>
+    <div className="max-w-4xl mx-auto space-y-8 pb-24 px-4 animate-fade-in">
+      <div className="flex justify-between items-center">
+          <h2 className="text-xl md:text-2xl font-black dark:text-white flex items-center gap-3">
+            <i className="fa-solid fa-gear text-indigo-500"></i> {t('nav.settings')}
+          </h2>
+          <button onClick={() => setView('dashboard')} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl text-[10px] font-black shadow-md border dark:border-slate-700">{t('common.back')}</button>
+      </div>
+
+      {/* Language Selector */}
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border dark:border-slate-700 space-y-6">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-black dark:text-white flex items-center gap-2">
+                <i className="fa-solid fa-language text-indigo-500 text-lg"></i> {t('settings.language')}
+            </h3>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {languages.map((l) => (
+                  <button 
+                    key={l.id} 
+                    onClick={() => setLang(l.id as Language)}
+                    className={`p-4 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${lang === l.id ? 'border-indigo-600 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600' : 'border-slate-100 dark:border-slate-700 text-slate-400'}`}
+                  >
+                      <span className="text-2xl">{l.flag}</span>
+                      <span className="text-[11px] font-black">{l.label}</span>
+                  </button>
+              ))}
           </div>
       </div>
 
       {isAdmin && (
-        <div className="bg-slate-900 border-4 border-amber-500 rounded-[2.5rem] p-6 text-white space-y-6 shadow-2xl">
-            <div className="flex justify-between items-center">
-                <button onClick={logoutAdmin} className="text-[10px] bg-rose-600 px-3 py-1 rounded-lg">خروج مدیر</button>
-                <h3 className="text-lg font-black text-amber-400">پنل صدور لایسنس تک‌کاربره</h3>
+        <div className="space-y-8 animate-slide-up">
+            <div className="bg-white dark:bg-slate-800 border-2 border-indigo-500 rounded-[2.5rem] p-6 md:p-8 space-y-8 shadow-xl relative overflow-hidden">
+                <div className="flex justify-between items-center relative z-10">
+                    <h3 className="text-sm md:text-lg font-black text-indigo-600 flex items-center gap-3">
+                        <i className="fa-solid fa-rectangle-ad"></i> مدیریت تبلیغات سراسری
+                    </h3>
+                    <button onClick={logoutAdmin} className="px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black shadow-lg">خروج از ادمین</button>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 relative z-10">
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 pr-2">عنوان تبلیغ:</label>
+                        <input type="text" value={adForm.title} onChange={(e) => setAdForm({...adForm, title: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border dark:border-slate-700 font-black text-xs outline-none focus:border-indigo-500" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 pr-2">متن دکمه:</label>
+                        <input type="text" value={adForm.btn} onChange={(e) => setAdForm({...adForm, btn: e.target.value})} className="w-full p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border dark:border-slate-700 font-black text-xs outline-none focus:border-indigo-500" />
+                    </div>
+                    <div className="md:col-span-2 space-y-2">
+                        <label className="text-[10px] font-black text-slate-400 pr-2">توضیحات کوتاه:</label>
+                        <textarea value={adForm.desc} onChange={(e) => setAdForm({...adForm, desc: e.target.value})} className="w-full h-24 p-4 bg-slate-50 dark:bg-slate-900 rounded-2xl border dark:border-slate-700 font-black text-xs outline-none focus:border-indigo-500 resize-none" />
+                    </div>
+                </div>
+                <button onClick={saveAdSettings} className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-sm shadow-xl active:scale-95 transition-all relative z-10">
+                    انتشار فوری تبلیغ
+                </button>
             </div>
-            <div className="bg-white/5 p-4 rounded-2xl border border-white/10">
-                <div className="flex gap-2">
-                    <input type="text" value={targetId} onChange={(e) => setTargetId(e.target.value.toUpperCase())} placeholder="HW-ID کاربر..." className="flex-1 p-3 bg-slate-800 rounded-xl text-center font-mono text-amber-400 outline-none" />
-                    <button onClick={() => setGeneratedKey(generateSecureLicense(targetId))} className="px-6 bg-amber-500 text-slate-900 rounded-xl font-black">تولید</button>
+
+            <div className="bg-slate-900 border-4 border-amber-500 rounded-[2.5rem] p-6 md:p-8 text-white space-y-8 shadow-2xl">
+                <h3 className="text-lg font-black text-amber-400 flex items-center gap-3">
+                    <i className="fa-solid fa-key"></i> صدور لایسنس جدید
+                </h3>
+                <div className="flex flex-col md:flex-row gap-3">
+                    <input type="text" value={targetId} onChange={(e) => setTargetId(e.target.value.toUpperCase())} placeholder="HW-ID را وارد کنید..." className="flex-1 p-4 bg-slate-800 rounded-2xl text-center font-mono text-amber-400 outline-none border border-white/5" />
+                    <button onClick={() => setGeneratedKey(generateSecureLicense(targetId))} className="py-4 md:px-8 bg-amber-500 text-slate-900 rounded-2xl font-black">تولید</button>
                 </div>
                 {generatedKey && (
-                    <div className="mt-4 p-4 bg-slate-800 rounded-xl border border-emerald-500/30 text-center">
-                        <div className="text-xl font-black text-white tracking-widest">{generatedKey}</div>
-                        <p className="text-[9px] text-slate-400 mt-1">این کد فقط روی دستگاه با ID وارد شده کار می‌کند.</p>
-                        <button onClick={() => {navigator.clipboard.writeText(generatedKey); alert('کپی شد.');}} className="text-[9px] underline mt-2">کپی لایسنس</button>
+                    <div className="p-6 bg-white/5 rounded-2xl border border-white/10 text-center animate-bounce-subtle">
+                        <div className="text-xl md:text-2xl font-black text-emerald-400 tracking-widest uppercase">{generatedKey}</div>
+                        <button onClick={() => {navigator.clipboard.writeText(generatedKey); alert('کپی شد.');}} className="text-[10px] text-slate-400 mt-2 underline">کپی لایسنس</button>
                     </div>
                 )}
             </div>
         </div>
       )}
 
-      {!isPremium ? (
-        <div className="bg-white dark:bg-slate-800 p-8 rounded-[3rem] shadow-xl border dark:border-slate-700 space-y-8">
-          <div className="text-center space-y-2">
-              <h3 className="text-xl font-black dark:text-white">ارتقای دائمی حساب 🔒</h3>
-              <p className="text-[10px] text-slate-400 font-bold">لایسنس صادر شده منحصر به سخت‌افزار همین دستگاه است.</p>
-          </div>
-          
-          <div className="bg-slate-50 dark:bg-slate-900 p-6 rounded-2xl border-2 border-dashed border-indigo-100 dark:border-slate-700 text-center">
-              <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block mb-2">Hardware Identity (Static)</span>
-              <div className="text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-wider mb-4 font-mono">{deviceId}</div>
-              <button onClick={() => {navigator.clipboard.writeText(deviceId); alert('شناسه کپی شد.');}} className="px-6 py-2 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 rounded-xl font-black text-[10px] border shadow-sm">کپی شناسه دستگاه</button>
-          </div>
+      {/* User Area */}
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border dark:border-slate-700 space-y-8">
+        {!isPremium ? (
+          <div className="space-y-8">
+            <div className="text-center space-y-2">
+                <h3 className="text-xl font-black dark:text-white">ارتقای دائمی حساب 🔒</h3>
+                <p className="text-[10px] text-slate-400 font-bold">این لایسنس مادام‌العمر و مخصوص همین دستگاه است.</p>
+            </div>
+            
+            <div className="bg-indigo-50 dark:bg-indigo-900/20 p-6 rounded-[2.5rem] border-2 border-indigo-100 dark:border-slate-700 text-center space-y-4">
+                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest block">Hardware Device Identity</span>
+                <div className="text-xl md:text-2xl font-black text-indigo-600 dark:text-indigo-400 tracking-wider font-mono bg-white dark:bg-slate-800 py-3 rounded-2xl border border-indigo-200">{deviceId}</div>
+                
+                <div className="flex flex-col gap-3">
+                    <button 
+                      onClick={handleCopyAndSupport} 
+                      className="w-full py-4 bg-indigo-600 text-white rounded-2xl font-black text-xs shadow-lg active:scale-95 transition-all flex items-center justify-center gap-3"
+                    >
+                        <i className="fa-solid fa-paper-plane"></i>
+                        کپی شناسه و ارسال به پشتیبانی
+                    </button>
+                    <p className="text-[9px] text-slate-400 font-bold leading-relaxed px-4">
+                        پس از کلیک، شناسه کپی شده و تلگرام پشتیبانی باز می‌شود. کد را برای دریافت لایسنس ارسال کنید.
+                    </p>
+                </div>
+            </div>
 
-          <div className="space-y-4">
-            <input 
-                type="text" 
-                value={licenseKey} 
-                onChange={(e) => setLicenseKey(e.target.value)} 
-                placeholder="کد لایسنس اختصاصی..." 
-                className="w-full p-6 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-2xl outline-none text-center font-black text-xl dark:text-white focus:border-indigo-500" 
-            />
-            <button onClick={verifyLicense} disabled={isVerifying} className="w-full py-6 bg-emerald-600 text-white rounded-2xl font-black text-lg shadow-xl flex items-center justify-center gap-3">
-                {isVerifying ? <i className="fa-solid fa-spinner fa-spin"></i> : 'فعال‌سازی لایسنس تک‌کاربره'}
+            <div className="space-y-4">
+              <input type="text" value={licenseKey} onChange={(e) => setLicenseKey(e.target.value)} placeholder="لایسنس را وارد کنید..." className="w-full p-5 bg-slate-50 dark:bg-slate-900 border-2 border-slate-100 dark:border-slate-700 rounded-3xl outline-none text-center font-black text-lg dark:text-white focus:border-indigo-500" />
+              <button onClick={verifyLicense} disabled={isVerifying} className="w-full py-5 bg-emerald-600 text-white rounded-[1.5rem] font-black text-lg shadow-2xl flex items-center justify-center gap-3 active:scale-95 transition-all">
+                  {isVerifying ? <i className="fa-solid fa-spinner fa-spin"></i> : <><i className="fa-solid fa-shield-check"></i> فعال‌سازی لایسنس</>}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-slate-900 p-10 rounded-[2.5rem] text-white text-center shadow-2xl border-4 border-amber-500/20 relative overflow-hidden">
+              <div className="relative z-10 space-y-4">
+                <div className="w-16 h-16 bg-amber-500 rounded-full flex items-center justify-center mx-auto mb-4 animate-bounce-subtle"><i className="fa-solid fa-crown text-2xl text-white"></i></div>
+                <h3 className="text-2xl font-black text-amber-400">اشتراک طلایی فعال است</h3>
+                <p className="text-[11px] opacity-60 font-bold max-w-sm mx-auto">تمامی قابلیت‌های هوشمند برای این دستگاه آزاد شد.</p>
+              </div>
+          </div>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+            <button onClick={() => setDarkMode(!darkMode)} className="p-6 bg-white dark:bg-slate-800 rounded-[2rem] border dark:border-slate-700 font-black text-xs shadow-sm flex flex-col items-center gap-3">
+              <i className={`fa-solid ${darkMode ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'} text-2xl`}></i>
+              {darkMode ? 'حالت روز' : 'حالت شب'}
             </button>
-          </div>
+            <button onClick={() => {if(window.confirm('آیا از بازنشانی داده‌ها مطمئن هستید؟')){localStorage.clear(); window.location.reload();}}} className="p-6 bg-rose-50 dark:bg-rose-900/10 rounded-[2rem] border border-rose-100 dark:border-rose-900/20 font-black text-xs text-rose-500 flex flex-col items-center gap-3">
+              <i className="fa-solid fa-trash-can text-2xl"></i>
+              پاکسازی
+            </button>
         </div>
-      ) : (
-        <div className="bg-slate-900 p-12 rounded-[3.5rem] text-white text-center shadow-2xl border-4 border-amber-500/20 relative overflow-hidden">
-            <h3 className="text-3xl font-black mb-3 text-amber-400">وضعیت: کاربر طلایی ✨</h3>
-            <p className="text-sm opacity-60 font-bold">لایسنس سخت‌افزاری شما با موفقیت روی این دستگاه فعال شده است.</p>
-            <div className="mt-6 inline-block px-4 py-1 bg-white/5 border border-white/10 rounded-full text-[9px] font-black text-emerald-400 tracking-widest">HARDWARE-BOUND LICENSE ACTIVE</div>
-        </div>
-      )}
-
-      <div className="grid grid-cols-2 gap-4">
-          <button onClick={() => setDarkMode(!darkMode)} className="p-6 bg-white dark:bg-slate-800 rounded-3xl border dark:border-slate-700 font-black text-xs">
-            <i className={`fa-solid ${darkMode ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'} mr-2`}></i> تغییر تم
-          </button>
-          <button onClick={() => {if(window.confirm('همه داده‌ها پاک شوند؟')){localStorage.clear(); window.location.reload();}}} className="p-6 bg-rose-50 dark:bg-rose-900/10 rounded-3xl border border-rose-100 dark:border-rose-900/20 font-black text-xs text-rose-500">
-            بازنشانی کامل
-          </button>
       </div>
     </div>
   );

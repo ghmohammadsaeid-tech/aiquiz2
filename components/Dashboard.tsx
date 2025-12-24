@@ -32,6 +32,25 @@ const Dashboard: React.FC<Props> = ({ questions, flashcards, setView, dueCards, 
 
   const randomQuote = useMemo(() => MOTIVATIONAL_QUOTES[Math.floor(Math.random() * MOTIVATIONAL_QUOTES.length)], []);
 
+  const handleShareApp = async () => {
+    const shareData = {
+      title: 'آزمون‌یار هوشمند',
+      text: 'سلام! من از اپلیکیشن آزمون‌یار برای یادگیری سریع و طراحی سوالات با هوش مصنوعی استفاده می‌کنم. پیشنهاد می‌کنم تو هم امتحانش کنی! 🚀',
+      url: window.location.href
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(window.location.href);
+        alert('لینک برنامه کپی شد! می‌توانید آن را برای دوستانتان بفرستید. ✨');
+      }
+    } catch (err) {
+      console.log('Error sharing:', err);
+    }
+  };
+
   const quickActions = [
     { id: 'exam', label: 'شروع آزمون', icon: 'fa-stopwatch', color: 'bg-rose-500', text: 'ارزیابی سطح' },
     { id: 'flashcards', label: 'یادگیری هوشمند', icon: 'fa-brain', color: 'bg-indigo-600', text: 'مرور SM-2' },
@@ -41,7 +60,7 @@ const Dashboard: React.FC<Props> = ({ questions, flashcards, setView, dueCards, 
 
   return (
     <div className="space-y-8 pb-10">
-      {/* بنر نصب اپلیکیشن - فقط زمانی نمایش داده می‌شود که مرورگر اجازه دهد */}
+      {/* بنر نصب اپلیکیشن */}
       {isInstallable && (
         <div className="bg-emerald-600 text-white p-4 rounded-3xl shadow-lg animate-bounce-subtle flex items-center justify-between gap-4 flex-row-reverse border-2 border-emerald-400">
             <div className="flex items-center gap-3 flex-row-reverse">
@@ -126,6 +145,26 @@ const Dashboard: React.FC<Props> = ({ questions, flashcards, setView, dueCards, 
           </div>
       </div>
 
+      {/* دعوت از دوستان */}
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-[2.5rem] shadow-sm border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row-reverse items-center justify-between gap-6 transition-all hover:shadow-md">
+          <div className="flex items-center gap-4 flex-row-reverse text-right">
+              <div className="w-14 h-14 bg-indigo-50 dark:bg-indigo-900/30 rounded-2xl flex items-center justify-center text-indigo-600 dark:text-indigo-400 text-2xl shadow-inner">
+                  <i className="fa-solid fa-share-nodes"></i>
+              </div>
+              <div>
+                  <h4 className="font-black dark:text-white text-slate-800">معرفی به دوستان</h4>
+                  <p className="text-[10px] text-slate-400 font-bold">لذت یادگیری هوشمند را با دیگران به اشتراک بگذارید.</p>
+              </div>
+          </div>
+          <button 
+            onClick={handleShareApp}
+            className="w-full md:w-auto px-8 py-3 bg-slate-900 dark:bg-indigo-600 text-white rounded-2xl font-black text-xs shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+              <i className="fa-solid fa-paper-plane text-[10px]"></i>
+              ارسال دعوت‌نامه
+          </button>
+      </div>
+
       {/* تبلیغ سراسری ابری */}
       {!isPremium && (
         <div className="ad-glow p-8 rounded-[2.5rem] bg-gradient-to-r from-indigo-600 via-indigo-700 to-purple-800 text-white shadow-2xl relative overflow-hidden">
@@ -141,7 +180,6 @@ const Dashboard: React.FC<Props> = ({ questions, flashcards, setView, dueCards, 
                     {dynamicAd.btn}
                 </button>
             </div>
-            {/* دکوراسیون پشت‌زمینه تبلیغ */}
             <div className="absolute top-0 left-0 w-full h-full pointer-events-none opacity-10">
                 <i className="fa-solid fa-sparkles absolute top-4 left-10 text-4xl rotate-12"></i>
                 <i className="fa-solid fa-star absolute bottom-4 right-20 text-2xl -rotate-12"></i>
@@ -167,7 +205,6 @@ const Dashboard: React.FC<Props> = ({ questions, flashcards, setView, dueCards, 
                   <i className="fa-solid fa-rocket"></i>
                 </button>
               </div>
-              {/* افکت بصری پس‌زمینه */}
               <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-32 -mt-32 blur-3xl"></div>
           </div>
       </div>
