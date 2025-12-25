@@ -17,6 +17,8 @@ interface Props {
   darkMode: boolean;
   setDarkMode: (v: boolean) => void;
   setView: (v: View) => void;
+  isInstallable: boolean;
+  onInstall: () => void;
 }
 
 const generateSecureLicense = (deviceId: string) => {
@@ -35,7 +37,7 @@ const generateSecureLicense = (deviceId: string) => {
     return `AZM-${p1}-${p2}-${p3}`;
 };
 
-const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkMode, setView, lang, setLang, t }) => {
+const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkMode, setView, lang, setLang, t, isInstallable, onInstall }) => {
   const [licenseKey, setLicenseKey] = useState('');
   const [deviceId, setDeviceId] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
@@ -105,7 +107,6 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
 
   const handleCopyAndSupport = () => {
     navigator.clipboard.writeText(deviceId);
-    // باز کردن تلگرام پشتیبانی (لینک نمونه)
     const supportUrl = "https://t.me/azmonyar_admin"; 
     alert('✅ شناسه دستگاه کپی شد. اکنون به پشتیبانی هدایت می‌شوید تا کد را ارسال کنید.');
     window.open(supportUrl, '_blank');
@@ -150,18 +151,41 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
   ];
 
   return (
-    <div className="max-w-4xl mx-auto space-y-8 pb-24 px-4 animate-fade-in">
-      <div className="flex justify-between items-center">
-          <h2 className="text-xl md:text-2xl font-black dark:text-white flex items-center gap-3">
+    <div className="max-w-4xl mx-auto space-y-8 pb-24 px-4 animate-fade-in text-right">
+      <div className="flex justify-between items-center flex-row-reverse">
+          <h2 className="text-xl md:text-2xl font-black dark:text-white flex items-center gap-3 flex-row-reverse">
             <i className="fa-solid fa-gear text-indigo-500"></i> {t('nav.settings')}
           </h2>
           <button onClick={() => setView('dashboard')} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl text-[10px] font-black shadow-md border dark:border-slate-700">{t('common.back')}</button>
       </div>
 
+      {/* App Installation Section */}
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border-4 border-black space-y-6">
+          <div className="flex items-center justify-between flex-row-reverse">
+            <h3 className="text-sm font-black dark:text-white flex items-center gap-2 flex-row-reverse">
+                <i className="fa-solid fa-mobile-screen text-emerald-500 text-lg"></i> سیستم و نصب
+            </h3>
+          </div>
+          <div className="flex flex-col md:flex-row-reverse items-center justify-between gap-6 p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700">
+              <div className="text-right flex-1">
+                  <p className="text-sm font-black dark:text-white mb-1">نسخه اپلیکیشن آزمون‌یار</p>
+                  <p className="text-[10px] text-slate-500 font-bold">برای تجربه کاربری بهتر و دسترسی سریع، اپلیکیشن را نصب کنید.</p>
+              </div>
+              <button 
+                onClick={onInstall}
+                disabled={!isInstallable}
+                className={`w-full md:w-auto px-8 py-3 rounded-2xl font-black text-xs border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2 ${isInstallable ? 'bg-emerald-400 text-black active:translate-x-0.5 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'}`}
+              >
+                  <i className="fa-solid fa-download"></i>
+                  {isInstallable ? 'نصب اپلیکیشن' : 'نصب شده یا غیرفعال'}
+              </button>
+          </div>
+      </div>
+
       {/* Language Selector */}
-      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border dark:border-slate-700 space-y-6">
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-black dark:text-white flex items-center gap-2">
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border-4 border-black space-y-6">
+          <div className="flex items-center justify-between flex-row-reverse">
+            <h3 className="text-sm font-black dark:text-white flex items-center gap-2 flex-row-reverse">
                 <i className="fa-solid fa-language text-indigo-500 text-lg"></i> {t('settings.language')}
             </h3>
           </div>
@@ -182,8 +206,8 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
       {isAdmin && (
         <div className="space-y-8 animate-slide-up">
             <div className="bg-white dark:bg-slate-800 border-2 border-indigo-500 rounded-[2.5rem] p-6 md:p-8 space-y-8 shadow-xl relative overflow-hidden">
-                <div className="flex justify-between items-center relative z-10">
-                    <h3 className="text-sm md:text-lg font-black text-indigo-600 flex items-center gap-3">
+                <div className="flex justify-between items-center flex-row-reverse relative z-10">
+                    <h3 className="text-sm md:text-lg font-black text-indigo-600 flex items-center gap-3 flex-row-reverse">
                         <i className="fa-solid fa-rectangle-ad"></i> مدیریت تبلیغات سراسری
                     </h3>
                     <button onClick={logoutAdmin} className="px-4 py-2 bg-rose-600 text-white rounded-xl text-[10px] font-black shadow-lg">خروج از ادمین</button>
@@ -209,7 +233,7 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
             </div>
 
             <div className="bg-slate-900 border-4 border-amber-500 rounded-[2.5rem] p-6 md:p-8 text-white space-y-8 shadow-2xl">
-                <h3 className="text-lg font-black text-amber-400 flex items-center gap-3">
+                <h3 className="text-lg font-black text-amber-400 flex items-center gap-3 flex-row-reverse">
                     <i className="fa-solid fa-key"></i> صدور لایسنس جدید
                 </h3>
                 <div className="flex flex-col md:flex-row gap-3">
@@ -227,7 +251,7 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
       )}
 
       {/* User Area */}
-      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border dark:border-slate-700 space-y-8">
+      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border-4 border-black space-y-8">
         {!isPremium ? (
           <div className="space-y-8">
             <div className="text-center space-y-2">
@@ -271,11 +295,11 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
         )}
 
         <div className="grid grid-cols-2 gap-4">
-            <button onClick={() => setDarkMode(!darkMode)} className="p-6 bg-white dark:bg-slate-800 rounded-[2rem] border dark:border-slate-700 font-black text-xs shadow-sm flex flex-col items-center gap-3">
+            <button onClick={() => setDarkMode(!darkMode)} className="p-6 bg-white dark:bg-slate-800 rounded-[2rem] border-2 border-black font-black text-xs shadow-sm flex flex-col items-center gap-3 transition-colors active:scale-95">
               <i className={`fa-solid ${darkMode ? 'fa-sun text-amber-400' : 'fa-moon text-indigo-600'} text-2xl`}></i>
               {darkMode ? 'حالت روز' : 'حالت شب'}
             </button>
-            <button onClick={() => {if(window.confirm('آیا از بازنشانی داده‌ها مطمئن هستید؟')){localStorage.clear(); window.location.reload();}}} className="p-6 bg-rose-50 dark:bg-rose-900/10 rounded-[2rem] border border-rose-100 dark:border-rose-900/20 font-black text-xs text-rose-500 flex flex-col items-center gap-3">
+            <button onClick={() => {if(window.confirm('آیا از بازنشانی داده‌ها مطمئن هستید؟')){localStorage.clear(); window.location.reload();}}} className="p-6 bg-rose-50 dark:bg-rose-900/10 rounded-[2rem] border-2 border-black font-black text-xs text-rose-500 flex flex-col items-center gap-3 transition-colors active:scale-95">
               <i className="fa-solid fa-trash-can text-2xl"></i>
               پاکسازی
             </button>

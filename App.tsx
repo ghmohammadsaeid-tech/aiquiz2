@@ -42,7 +42,6 @@ const App: React.FC = () => {
     localStorage.getItem('isPremium') === 'true'
   );
   const [darkMode, setDarkMode] = useState<boolean>(() => {
-    // FIX: Using (window as any) to fix the TypeScript error regarding the Telegram property
     if ((window as any).Telegram?.WebApp) {
         return (window as any).Telegram.WebApp.colorScheme === 'dark';
     }
@@ -62,16 +61,11 @@ const App: React.FC = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    // FIX: Using (window as any) to access the injected Telegram WebApp object safely
     if ((window as any).Telegram?.WebApp) {
         const tg = (window as any).Telegram.WebApp;
         tg.ready();
-        tg.expand(); // باز کردن کامل صفحه در موبایل
-        
-        // تنظیم رنگ هدر تلگرام
+        tg.expand();
         tg.setHeaderColor(darkMode ? '#0f172a' : '#ffffff');
-
-        // مدیریت دکمه بازگشت بومی تلگرام
         if (view !== 'dashboard') {
             tg.BackButton.show();
             tg.BackButton.onClick(() => setView('dashboard'));
@@ -80,11 +74,13 @@ const App: React.FC = () => {
         }
     }
 
-    window.addEventListener('beforeinstallprompt', (e) => {
+    const handleBeforeInstall = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
       setIsInstallable(true);
-    });
+    };
+
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
 
     localStorage.setItem('questions', JSON.stringify(questions));
     localStorage.setItem('flashcards', JSON.stringify(flashcards));
@@ -98,6 +94,8 @@ const App: React.FC = () => {
     
     if (darkMode) document.body.classList.add('dark');
     else document.body.classList.remove('dark');
+
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
   }, [questions, flashcards, userStats, lang, isPremium, darkMode, view]);
 
   const t = (key: string) => TRANSLATIONS[lang][key] || TRANSLATIONS['fa'][key] || key;
@@ -111,8 +109,10 @@ const App: React.FC = () => {
     if (!deferredPrompt) return;
     deferredPrompt.prompt();
     const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') setIsInstallable(false);
-    setDeferredPrompt(null);
+    if (outcome === 'accepted') {
+      setIsInstallable(false);
+      setDeferredPrompt(null);
+    }
   };
 
   const addXp = (quality: number) => {
@@ -131,7 +131,7 @@ const App: React.FC = () => {
       case 'bank': return <QuestionBank questions={questions} setQuestions={setQuestions} setFlashcards={setFlashcards} lang={lang} t={t} isPremium={isPremium} setView={setView} />;
       case 'ai': return <AIAssistant setQuestions={setQuestions} lang={lang} t={t} isPremium={isPremium} setView={setView} />;
       case 'stats': return <Stats flashcards={flashcards} userStats={userStats} t={t} lang={lang} setView={setView} />;
-      case 'settings': return <Settings questions={questions} setQuestions={setQuestions} flashcards={flashcards} setFlashcards={setFlashcards} lang={lang} setLang={setLang} t={t} isPremium={isPremium} setIsPremium={setIsPremium} userStats={userStats} setUserStats={setUserStats} darkMode={darkMode} setDarkMode={setDarkMode} setView={setView} />;
+      case 'settings': return <Settings questions={questions} setQuestions={setQuestions} flashcards={flashcards} setFlashcards={setFlashcards} lang={lang} setLang={setLang} t={t} isPremium={isPremium} setIsPremium={setIsPremium} userStats={userStats} setUserStats={setUserStats} darkMode={darkMode} setDarkMode={setDarkMode} setView={setView} isInstallable={isInstallable} onInstall={handleInstallClick} />;
       default: return <Dashboard questions={questions} flashcards={flashcards} setView={setView} dueCards={dueCardsCount} userStats={userStats} t={t} isPremium={isPremium} lang={lang} dynamicAd={dynamicAd} isInstallable={isInstallable} onInstall={handleInstallClick} />;
     }
   };

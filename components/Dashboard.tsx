@@ -57,15 +57,20 @@ const Dashboard: React.FC<Props> = ({ questions, flashcards, setView, dueCards, 
   return (
     <div className="space-y-10 pb-20">
       {isInstallable && (
-        <div className="bg-emerald-500 text-white p-5 rounded-[2rem] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] border-[4px] border-black flex items-center justify-between gap-4 flex-row-reverse animate-bounce-subtle">
-            <div className="flex items-center gap-3 flex-row-reverse">
-                <i className="fa-solid fa-mobile-screen-button text-2xl"></i>
-                <div className="text-right">
-                    <div className="text-sm font-black uppercase">نصب نسخه اپلیکیشن</div>
-                    <div className="text-[10px] font-bold opacity-90">دسترسی سریع و آفلاین در موبایل</div>
+        <div className="relative group overflow-hidden bg-white dark:bg-slate-800 p-8 rounded-[3rem] border-[5px] border-black shadow-[12px_12px_0px_0px_rgba(16,185,129,1)] dark:shadow-[12px_12px_0px_0px_rgba(16,185,129,0.4)] flex flex-col md:flex-row-reverse items-center justify-between gap-8 animate-fade-in">
+            <div className="flex items-center gap-6 flex-row-reverse text-right flex-1">
+                <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/40 text-emerald-600 dark:text-emerald-400 rounded-3xl flex items-center justify-center text-4xl border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] animate-float">
+                    <i className="fa-solid fa-cloud-arrow-down"></i>
+                </div>
+                <div>
+                    <h4 className="text-2xl font-black dark:text-white text-slate-900 uppercase tracking-tighter">نصب نسخه اپلیکیشن (PWA)</h4>
+                    <p className="text-sm text-slate-500 dark:text-slate-400 font-bold mt-2 leading-relaxed">برای دسترسی سریع‌تر، آفلاین و بدون نیاز به مرورگر، آزمون‌یار را روی دسکتاپ یا موبایل خود نصب کنید.</p>
                 </div>
             </div>
-            <button onClick={onInstall} className="px-6 py-2 bg-white text-emerald-700 rounded-xl font-black text-xs border-2 border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:scale-95 transition-all">نصب</button>
+            <button onClick={onInstall} className="w-full md:w-auto px-12 py-5 bg-emerald-500 text-black rounded-2xl font-black text-lg border-[4px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:scale-105 active:translate-x-1 active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3">
+                <i className="fa-solid fa-download"></i> نصب فوری
+            </button>
+            <div className="absolute -top-10 -left-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
         </div>
       )}
 
