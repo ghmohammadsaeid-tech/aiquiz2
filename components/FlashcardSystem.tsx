@@ -51,7 +51,6 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
     if (currentIdx < sessionCards.length - 1) { setCurrentIdx(currentIdx + 1); setFlipped(false); } else { setLearningMode(false); setShowFinishedAd(true); }
   };
 
-  // تابع کمکی برای استخراج گزینه‌ها از متن ذخیره شده در example
   const parseOptions = (exampleText?: string) => {
     if (!exampleText || !exampleText.startsWith('گزینه‌ها:')) return null;
     return exampleText.replace('گزینه‌ها: ', '').split(' | ');
@@ -64,15 +63,6 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
                   <div className="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-6 text-emerald-600 text-4xl border-2 border-black"><i className="fa-solid fa-check-double"></i></div>
                   <h2 className="text-3xl font-black mb-4 dark:text-white">آفرین! خسته نباشی 🎉</h2>
                   <p className="text-slate-500 mb-8 font-bold">تمامی کارت‌های امروز بررسی شدند.</p>
-                  {!isPremium && (
-                    <div className="mb-8 p-6 bg-amber-400 border-[4px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] text-right flex flex-col items-center gap-3">
-                        <h4 className="text-sm font-black text-black flex items-center gap-2 flex-row-reverse"><i className="fa-solid fa-crown"></i> {dynamicAd.title}</h4>
-                        <p className="text-[11px] text-black/80 font-bold text-center">{dynamicAd.desc}</p>
-                        <button onClick={() => dynamicAd.url !== "#" ? window.open(dynamicAd.url, '_blank') : setView('settings')} className="w-full py-3 bg-black text-white rounded-xl text-xs font-black">
-                          {dynamicAd.btn}
-                        </button>
-                    </div>
-                  )}
                   <button onClick={() => setView('dashboard')} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all">بازگشت به داشبورد</button>
               </div>
           </div>
@@ -85,67 +75,108 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
 
     return (
       <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
+        <style>{`
+            .flashcard-wrapper {
+                perspective: 1500px;
+                width: 100%;
+                height: 440px;
+            }
+            .flashcard-inner {
+                position: relative;
+                width: 100%;
+                height: 100%;
+                transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+                transform-style: preserve-3d;
+            }
+            .flashcard-wrapper.is-flipped .flashcard-inner {
+                transform: rotateY(180deg);
+            }
+            .flashcard-front, .flashcard-back {
+                position: absolute;
+                inset: 0;
+                width: 100%;
+                height: 100%;
+                -webkit-backface-visibility: hidden;
+                backface-visibility: hidden;
+                border-radius: 2.5rem;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                padding: 2.5rem;
+                overflow: hidden;
+            }
+            .flashcard-back {
+                transform: rotateY(180deg);
+            }
+        `}</style>
+        
         <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-3xl border-[3px] border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
             <span className="text-xs font-black dark:text-white uppercase tracking-tighter">کارت {currentIdx + 1} از {sessionCards.length}</span>
             <button onClick={() => setLearningMode(false)} className="px-5 py-2 bg-rose-500 text-white rounded-xl font-black text-[10px] border-2 border-black">توقف</button>
         </div>
-        <div className={`flashcard ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(!flipped)}>
+
+        <div className={`flashcard-wrapper ${flipped ? 'is-flipped' : ''}`} onClick={() => !flipped && setFlipped(true)}>
             <div className="flashcard-inner">
-                {/* روی کارت: سوال + گزینه‌ها */}
-                <div className="flashcard-front bg-indigo-600 border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center p-6 overflow-y-auto custom-scrollbar">
-                    <div className="text-xl md:text-2xl font-black text-center text-white leading-relaxed mb-8 w-full">
-                      {card.type === 'cloze' ? card.front.replace(/\[(.*?)\]/g, '[...]') : card.front}
+                {/* روی کارت (Front) */}
+                <div className="flashcard-front bg-indigo-600 border-[6px] border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="text-xl md:text-2xl font-black text-center text-white leading-tight overflow-y-auto custom-scrollbar mb-6">
+                      {card.front}
                     </div>
                     
                     {options && (
-                      <div className="grid grid-cols-1 gap-3 w-full max-w-md mt-auto">
+                      <div className="grid grid-cols-1 gap-2.5 w-full max-w-sm mx-auto">
                         {options.map((opt, i) => (
-                          <div key={i} className="bg-white/10 border-2 border-white/30 p-3 rounded-xl text-white text-right flex items-center gap-3 flex-row-reverse">
-                            <span className="w-6 h-6 flex items-center justify-center bg-white text-indigo-600 rounded-lg font-black text-[10px]">{String.fromCharCode(65 + i)}</span>
-                            <span className="text-xs font-bold flex-1">{opt}</span>
+                          <div key={i} className="bg-white/10 border-2 border-white/20 p-3 rounded-xl text-white text-right flex items-center gap-3 flex-row-reverse">
+                            <span className="w-6 h-6 flex items-center justify-center bg-white text-indigo-600 rounded-lg font-black text-[10px] flex-shrink-0">{String.fromCharCode(65 + i)}</span>
+                            <span className="text-[11px] font-bold flex-1 truncate">{opt}</span>
                           </div>
                         ))}
                       </div>
                     )}
 
-                    <div className="mt-8 text-[9px] bg-black/20 px-4 py-2 rounded-full text-white font-black uppercase tracking-widest animate-pulse border border-white/20">لمس برای مشاهده پاسخ</div>
+                    <div className="mt-auto pt-6 text-center">
+                      <div className="inline-block text-[8px] bg-black/20 px-5 py-2 rounded-full text-white font-black uppercase tracking-widest border border-white/10">برای مشاهده پاسخ کلیک کنید</div>
+                    </div>
                 </div>
 
-                {/* پشت کارت: فقط پاسخ صحیح */}
-                <div className="flashcard-back bg-white dark:bg-slate-800 border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)]">
-                    <div className="flex flex-col items-center justify-center h-full space-y-8 p-6">
-                      <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
-                        <i className="fa-solid fa-check"></i>
+                {/* پشت کارت (Back) */}
+                <div className="flashcard-back bg-white dark:bg-slate-800 border-[6px] border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)]" onClick={(e) => e.stopPropagation()}>
+                    <div className="flex flex-col items-center justify-center h-full space-y-8">
+                      <div className="w-20 h-20 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-3xl flex items-center justify-center text-4xl border-[3px] border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
+                        <i className="fa-solid fa-circle-check"></i>
                       </div>
                       
-                      <div className="text-center space-y-4">
+                      <div className="text-center space-y-3">
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">پاسخ صحیح:</p>
-                        <div className="text-2xl md:text-3xl font-black text-emerald-600 dark:text-emerald-400 px-8 leading-relaxed">
-                          {card.type === 'cloze' ? <div dangerouslySetInnerHTML={{ __html: card.front.replace(/\[(.*?)\]/g, '<span class="bg-indigo-600 text-white px-2 rounded-lg font-black">$1</span>') }} /> : card.back}
+                        <div className="text-2xl md:text-4xl font-black text-emerald-600 dark:text-emerald-400 px-6 leading-tight">
+                          {card.back}
                         </div>
                       </div>
 
-                      <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl border-2 border-black max-w-[90%] text-center">
-                          <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-black mb-1">دسته: {card.category}</p>
-                          <p className="text-[11px] text-slate-500 font-bold italic leading-relaxed">برای تکرار بعدی، نمره خود را انتخاب کنید.</p>
+                      <div className="bg-slate-50 dark:bg-slate-900 p-5 rounded-[2rem] border-2 border-black w-full text-center">
+                          <p className="text-[9px] text-indigo-600 dark:text-indigo-400 font-black mb-1 italic">دسته: {card.category}</p>
+                          <p className="text-[10px] text-slate-500 font-black italic">نمره تسلط خود را در پایین انتخاب کنید.</p>
                       </div>
                     </div>
+                    {/* دکمه کوچک برای برگشت دستی به جلو در صورت نیاز */}
+                    <button onClick={() => setFlipped(false)} className="absolute top-4 right-4 w-8 h-8 bg-slate-100 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-400 border border-black/10"><i className="fa-solid fa-rotate-left text-[10px]"></i></button>
                 </div>
             </div>
         </div>
+
         {flipped && (
             <div className="bg-white dark:bg-slate-800 p-8 rounded-[3rem] border-[4px] border-black shadow-[10px_10px_0px_0px_rgba(0,0,0,1)] animate-slide-up space-y-6">
-                <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest">میزان تسلط خود را ارزیابی کنید</p>
-                <div className="grid grid-cols-6 gap-3">
+                <p className="text-center text-[10px] font-black text-slate-400 uppercase tracking-widest italic">میزان یادگیری این کارت را چطور ارزیابی می‌کنید؟</p>
+                <div className="grid grid-cols-6 gap-2">
                     {[0, 1, 2, 3, 4, 5].map(q => (
                         <button key={q} onClick={(e) => { e.stopPropagation(); handleSM2Rating(q); }} 
-                            className={`p-4 rounded-2xl font-black text-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all 
+                            className={`h-14 rounded-2xl font-black text-xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none transition-all 
                             ${q <= 1 ? 'bg-rose-400' : q <= 3 ? 'bg-amber-400' : 'bg-emerald-400'}`}>
                             {q}
                         </button>
                     ))}
                 </div>
-                <div className="flex justify-between text-[10px] font-black text-slate-500 px-2 uppercase italic"><span>خیلی بد</span><span>عالی</span></div>
+                <div className="flex justify-between text-[10px] font-black text-slate-500 px-2 uppercase italic"><span>اصلاً نمی‌دانستم</span><span>کاملاً مسلط هستم</span></div>
             </div>
         )}
       </div>
@@ -217,7 +248,6 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
                 </div>
             </div>
 
-            {/* بخش تکنیک‌های طلایی یادگیری */}
             <div className="space-y-8 mt-16">
                 <div className="flex items-center gap-4 flex-row-reverse">
                     <div className="h-1 flex-1 bg-black dark:bg-white rounded-full"></div>
@@ -226,50 +256,47 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    {/* ۱. تکنیک‌های یادگیری سریع */}
                     <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(79,70,229,1)] space-y-6 text-right">
                         <div className="w-14 h-14 bg-indigo-600 text-white rounded-2xl flex items-center justify-center text-2xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"><i className="fa-solid fa-bolt-lightning"></i></div>
                         <h4 className="text-xl font-black dark:text-white">۱. یادگیری علمی</h4>
                         <div className="space-y-4 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300">
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
                                 <span className="text-indigo-600 dark:text-indigo-400 block mb-1 font-black">بازیابی فعال (Active Recall):</span>
-                                بعد از خواندن، کتاب را ببندید و هر چه یادتان هست را بازگو کنید. این پیوندهای عصبی را بسیار قوی‌تر از روخوانی ساده می‌کند.
+                                بعد از خواندن، کتاب را ببندید و هر چه یادتان هست را بازگو کنید.
                             </div>
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
                                 <span className="text-indigo-600 dark:text-indigo-400 block mb-1 font-black">تکنیک فاینمن:</span>
-                                تصور کنید می‌خواهید مطلب را به یک کودک ۱۰ ساله درس بدهید. کلمات ساده و مثال‌ها، نقاط ضعف شما را آشکار می‌کند.
+                                تصور کنید می‌خواهید مطلب را به یک کودک ۱۰ ساله درس بدهید.
                             </div>
                         </div>
                     </div>
 
-                    {/* ۲. مدیریت زمان و تمرکز */}
                     <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(244,63,94,1)] space-y-6 text-right">
                         <div className="w-14 h-14 bg-rose-500 text-white rounded-2xl flex items-center justify-center text-2xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"><i className="fa-solid fa-clock-rotate-left"></i></div>
                         <h4 className="text-xl font-black dark:text-white">۲. زمان و تمرکز</h4>
                         <div className="space-y-4 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300">
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
                                 <span className="text-rose-600 dark:text-rose-400 block mb-1 font-black">پومودورو (اصلاح شده):</span>
-                                ۵۰ دقیقه تمرکز کامل و ۱۰ دقیقه استراحت. در آن ۵۰ دقیقه گوشی باید در اتاق دیگری باشد!
+                                ۵۰ دقیقه تمرکز کامل و ۱۰ دقیقه استراحت.
                             </div>
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
                                 <span className="text-rose-600 dark:text-rose-400 block mb-1 font-black">قانون پارکینسون:</span>
-                                زمان مشخص و کوتاهی برای فصل تعیین کنید. اگر کل روز وقت بگذارید، مطالعه آن کل روز طول خواهد کشید!
+                                زمان مشخص و کوتاهی برای مطالعه هر فصل تعیین کنید.
                             </div>
                         </div>
                     </div>
 
-                    {/* ۳. سازماندهی محتوا (یادگیری بصری) */}
                     <div className="bg-white dark:bg-slate-800 p-8 rounded-[2.5rem] border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(16,185,129,1)] space-y-6 text-right">
                         <div className="w-14 h-14 bg-emerald-500 text-white rounded-2xl flex items-center justify-center text-2xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]"><i className="fa-solid fa-eye"></i></div>
                         <h4 className="text-xl font-black dark:text-white">۳. قدرت تصاویر</h4>
                         <div className="space-y-4 text-xs font-bold leading-relaxed text-slate-600 dark:text-slate-300">
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
                                 <span className="text-emerald-600 dark:text-emerald-400 block mb-1 font-black">نقشه ذهنی (Mind Map):</span>
-                                از نمودارهای درختی استفاده کنید. مغز تصاویر را ۶۰ هزار برابر سریع‌تر از متن پردازش می‌کند.
+                                از نمودارهای درختی برای پردازش بصری سریع‌تر استفاده کنید.
                             </div>
                             <div className="bg-slate-50 dark:bg-slate-900 p-4 rounded-xl border-2 border-black">
                                 <span className="text-emerald-600 dark:text-emerald-400 block mb-1 font-black">تکرار فاصله‌دار:</span>
-                                از سیستم فلش‌کارت (Anki) همین اپلیکیشن استفاده کنید تا مطالب از حافظه کوتاه‌مدت به بلندمدت منتقل شوند.
+                                از سیستم SM-2 همین اپلیکیشن برای انتقال به حافظه بلندمدت استفاده کنید.
                             </div>
                         </div>
                     </div>
