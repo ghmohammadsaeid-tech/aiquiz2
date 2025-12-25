@@ -12,11 +12,28 @@ interface Props {
   setView: (v: View) => void;
 }
 
+const EXAM_QUOTES = [
+  "توانا بود هر که دانا بود، ز دانش دل پیر برنا بود. (فردوسی)",
+  "موفقیت مجموع تلاش‌های کوچکی است که هر روز تکرار می‌شوند.",
+  "فرصت‌ها اتفاق نمی‌افتند، شما آن‌ها را می‌سازید.",
+  "خرد، چراغ زندگی و راهنمای انسان در مسیر تاریکی است.",
+  "آموزش، قدرتمندترین سلاحی است که می‌توانید برای تغییر جهان استفاده کنید.",
+  "ز گهواره تا گور دانش بجوی.",
+  "پیروزی متعلق به کسانی است که بیشترین پایداری را دارند.",
+  "هرگز از یادگیری دست نکش، زیرا زندگی هرگز از آموزش دست نمی‌کشد.",
+  "بهترین راه برای پیش‌بینی آینده، ساختن آن است."
+];
+
 const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards, t, isPremium, setView }) => {
   const [filter, setFilter] = useState('all');
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [randomCount, setRandomCount] = useState(10);
   const [examType, setExamType] = useState<'testy' | 'tashrihi'>('testy');
+
+  // انتخاب جمله تصادفی برای این سشن
+  const currentQuote = useMemo(() => {
+      return EXAM_QUOTES[Math.floor(Math.random() * EXAM_QUOTES.length)];
+  }, []);
 
   const categories = useMemo(() => Array.from(new Set(questions.map(q => q.c))), [questions]);
 
@@ -101,64 +118,84 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
     <div className="space-y-6 animate-fade-in">
       <style>{`
         @media print {
-          @page { size: A4; margin: 10mm 12mm; }
+          @page { size: A4; margin: 15mm 12mm; }
           body { background: white !important; font-size: 10pt !important; color: black !important; }
           .no-print { display: none !important; }
           .question-card { 
             border: none !important; 
             box-shadow: none !important; 
-            margin-bottom: 15pt !important; 
+            margin-bottom: 20pt !important; 
             padding: 0 !important;
             break-inside: avoid;
             page-break-inside: avoid;
           }
           .option-box { 
-            padding: 2.5pt 6pt !important; 
+            padding: 3pt 8pt !important; 
             border: 1px solid #000 !important; 
-            font-size: 9pt !important;
+            font-size: 9.5pt !important;
             background: none !important;
-            margin-top: 1.5pt !important;
+            margin-top: 2pt !important;
           }
           .descriptive-space {
-            border-bottom: 1px dotted #ccc !important;
-            height: 40pt;
-            margin-top: 5pt;
+            border-bottom: 1px dotted #888 !important;
+            height: 50pt;
+            margin-top: 8pt;
+            width: 100%;
           }
           .exam-header {
             border: 2px solid #000 !important;
-            padding: 6pt !important;
-            margin-bottom: 12pt !important;
-            border-radius: 2px;
+            padding: 8pt !important;
+            margin-bottom: 15pt !important;
+            border-radius: 4px;
           }
-          .q-text { font-size: 10.5pt !important; font-weight: bold !important; margin-bottom: 4pt !important; line-height: 1.4; }
-          .answer-key-section { break-before: auto; margin-top: 20pt; border-top: 1px dashed #000; padding-top: 10pt; }
+          .q-text { font-size: 11pt !important; font-weight: bold !important; margin-bottom: 6pt !important; line-height: 1.5; }
+          
+          /* CRITICAL: Force Answer Key to start on a NEW PAGE */
+          .answer-key-section { 
+            break-before: page !important; 
+            page-break-before: always !important;
+            margin-top: 0 !important; 
+            padding-top: 20pt !important;
+            border-top: none !important;
+          }
+          
           .print-label { font-weight: 900; }
+          .exam-quote {
+              text-align: center;
+              font-style: italic;
+              font-size: 8pt;
+              margin-bottom: 8pt;
+              border-bottom: 1px solid #eee;
+              padding-bottom: 4pt;
+              color: #444;
+          }
         }
       `}</style>
 
       {/* Professional Exam Print Header */}
       <div className="hidden print:block text-black">
+        <div className="exam-quote">{currentQuote}</div>
         <div className="exam-header relative text-right">
             <div className="flex justify-between items-start flex-row-reverse mb-2">
-                <div className="space-y-0.5 text-[8pt]">
+                <div className="space-y-1 text-[8pt]">
                     <p><span className="print-label">تاریخ آزمون:</span> ...................</p>
                     <p><span className="print-label">مدت زمان:</span> ...................</p>
                     <p><span className="print-label">نوع آزمون:</span> {examType === 'testy' ? 'تستی' : 'تشریحی'}</p>
                 </div>
                 <div className="text-center">
-                    <h1 className="text-[10pt] font-black mb-0.5">باسمه تعالی</h1>
-                    <h2 className="text-[12pt] font-black italic">برگه رسمی سوالات آزمون</h2>
+                    <h1 className="text-[11pt] font-black mb-1">باسمه تعالی</h1>
+                    <h2 className="text-[13pt] font-black italic">برگه رسمی سوالات آزمون</h2>
                 </div>
-                <div className="text-left text-[8pt] min-w-[60px]">
+                <div className="text-left text-[8pt] min-w-[70px]">
                     <p>نمره: .........</p>
                 </div>
             </div>
             
-            <div className="grid grid-cols-2 gap-4 border-t border-black pt-1.5 mb-1.5">
-                <div className="text-[9pt]"><span className="print-label">نام و نام خانوادگی:</span> ...........................................</div>
-                <div className="text-[9pt]"><span className="print-label">موضوع/درس:</span> {filter === 'all' ? 'آزمون جامع' : filter}</div>
+            <div className="grid grid-cols-2 gap-4 border-t-2 border-black pt-2 mb-2">
+                <div className="text-[10pt]"><span className="print-label">نام و نام خانوادگی:</span> ...........................................</div>
+                <div className="text-[10pt]"><span className="print-label">موضوع/درس:</span> {filter === 'all' ? 'آزمون جامع' : filter}</div>
             </div>
-            <div className="text-[9pt] border-b border-black pb-1.5">
+            <div className="text-[10pt] border-b-2 border-black pb-2">
                 <span className="print-label">نام استاد:</span> ...........................................
             </div>
         </div>
@@ -317,25 +354,33 @@ const QuestionBank: React.FC<Props> = ({ questions, setQuestions, setFlashcards,
           })}
       </div>
 
-      {/* Answer Key Section (Teacher Copy) */}
+      {/* Answer Key Section (Teacher Copy) - ALWAYS STARTS ON NEW PAGE */}
       <div className="hidden print:block answer-key-section">
-        <div className="border-[2px] border-black p-6 rounded-xl">
-            <h3 className="text-lg font-black mb-4 text-center text-black border-b border-black pb-2 italic">کلید آزمون (پاسخ‌نامه مدرس)</h3>
-            <div className={`grid ${examType === 'testy' ? 'grid-cols-5' : 'grid-cols-2'} gap-3`}>
+        <div className="border-[3px] border-black p-8 rounded-2xl bg-white">
+            <h3 className="text-[13pt] font-black mb-6 text-center text-black border-b-2 border-black pb-3 italic">کلید آزمون نهایی (ویژه مدرس)</h3>
+            <div className={`grid ${examType === 'testy' ? 'grid-cols-5' : 'grid-cols-1'} gap-4`}>
                 {questionsToPrint.map((q, i) => (
-                    <div key={i} className="text-[9pt] border border-black p-2 flex justify-between flex-row-reverse font-bold text-black rounded bg-slate-50">
-                        <span className="bg-black text-white w-5 h-5 rounded flex items-center justify-center ml-1">{i + 1}</span>
-                        <span>{examType === 'testy' ? String.fromCharCode(65 + q.a) : q.o[q.a]}</span>
+                    <div key={i} className={`text-[10pt] border-2 border-black p-3 flex justify-between flex-row-reverse font-bold text-black rounded-xl bg-slate-50 ${examType === 'tashrihi' ? 'text-right' : ''}`}>
+                        <span className="bg-black text-white w-6 h-6 rounded-lg flex items-center justify-center ml-2 flex-shrink-0">{i + 1}</span>
+                        <span className="flex-1">{examType === 'testy' ? `گزینه ${String.fromCharCode(65 + q.a)}` : q.o[q.a]}</span>
                     </div>
                 ))}
             </div>
-            <div className="mt-10 flex justify-between items-end flex-row-reverse">
+            
+            <div className="mt-16 flex justify-between items-end flex-row-reverse px-4">
                 <div className="text-center">
-                    <p className="font-bold text-[9pt] mb-8">مهر و امضا</p>
-                    <div className="w-32 border-b border-black"></div>
+                    <p className="font-black text-[10pt] mb-12">مهر و امضای مدیر/استاد</p>
+                    <div className="w-40 border-b-2 border-black"></div>
                 </div>
-                <div className="text-[7pt] text-slate-400">Smart Exam Assistant - Teacher Master Copy</div>
+                <div className="text-right">
+                    <p className="text-[8pt] font-bold text-slate-500 mb-1">سیستم طراحی آزمون هوشمند</p>
+                    <p className="text-[7pt] text-slate-400 italic">Smart Exam Assistant - Teacher Master Copy v2.5</p>
+                </div>
             </div>
+        </div>
+        
+        <div className="mt-8 text-center text-[8pt] text-slate-300 italic">
+            -- پایان پاسخ‌نامه رسمی --
         </div>
       </div>
     </div>
