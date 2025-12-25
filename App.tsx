@@ -9,6 +9,7 @@ import QuestionBank from './components/QuestionBank';
 import AIAssistant from './components/AIAssistant';
 import Settings from './components/Settings';
 import Stats from './components/Stats';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 
 const INITIAL_QUESTIONS: Question[] = [
   {
@@ -167,6 +168,9 @@ const App: React.FC = () => {
         )}
       </nav>
       <main className="flex-1 container mx-auto px-4 py-8 max-w-6xl">{renderContent()}</main>
+      
+      {/* PWA Install Prompt */}
+      <PWAInstallPrompt isInstallable={isInstallable} onInstall={handleInstallClick} />
     </div>
   );
 };

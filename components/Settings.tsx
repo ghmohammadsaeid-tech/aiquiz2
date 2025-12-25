@@ -159,29 +159,6 @@ const Settings: React.FC<Props> = ({ isPremium, setIsPremium, darkMode, setDarkM
           <button onClick={() => setView('dashboard')} className="px-4 py-2 bg-white dark:bg-slate-800 rounded-xl text-[10px] font-black shadow-md border dark:border-slate-700">{t('common.back')}</button>
       </div>
 
-      {/* App Installation Section */}
-      <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border-4 border-black space-y-6">
-          <div className="flex items-center justify-between flex-row-reverse">
-            <h3 className="text-sm font-black dark:text-white flex items-center gap-2 flex-row-reverse">
-                <i className="fa-solid fa-mobile-screen text-emerald-500 text-lg"></i> سیستم و نصب
-            </h3>
-          </div>
-          <div className="flex flex-col md:flex-row-reverse items-center justify-between gap-6 p-6 bg-slate-50 dark:bg-slate-900 rounded-3xl border-2 border-dashed border-slate-300 dark:border-slate-700">
-              <div className="text-right flex-1">
-                  <p className="text-sm font-black dark:text-white mb-1">نسخه اپلیکیشن آزمون‌یار</p>
-                  <p className="text-[10px] text-slate-500 font-bold">برای تجربه کاربری بهتر و دسترسی سریع، اپلیکیشن را نصب کنید.</p>
-              </div>
-              <button 
-                onClick={onInstall}
-                disabled={!isInstallable}
-                className={`w-full md:w-auto px-8 py-3 rounded-2xl font-black text-xs border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all flex items-center justify-center gap-2 ${isInstallable ? 'bg-emerald-400 text-black active:translate-x-0.5 active:translate-y-0.5' : 'bg-slate-200 text-slate-400 cursor-not-allowed opacity-50'}`}
-              >
-                  <i className="fa-solid fa-download"></i>
-                  {isInstallable ? 'نصب اپلیکیشن' : 'نصب شده یا غیرفعال'}
-              </button>
-          </div>
-      </div>
-
       {/* Language Selector */}
       <div className="bg-white dark:bg-slate-800 p-6 md:p-8 rounded-[2.5rem] shadow-xl border-4 border-black space-y-6">
           <div className="flex items-center justify-between flex-row-reverse">
