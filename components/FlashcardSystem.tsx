@@ -51,6 +51,12 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
     if (currentIdx < sessionCards.length - 1) { setCurrentIdx(currentIdx + 1); setFlipped(false); } else { setLearningMode(false); setShowFinishedAd(true); }
   };
 
+  // تابع کمکی برای استخراج گزینه‌ها از متن ذخیره شده در example
+  const parseOptions = (exampleText?: string) => {
+    if (!exampleText || !exampleText.startsWith('گزینه‌ها:')) return null;
+    return exampleText.replace('گزینه‌ها: ', '').split(' | ');
+  };
+
   if (showFinishedAd) {
       return (
           <div className="max-w-2xl mx-auto space-y-6 animate-slide-up">
@@ -75,6 +81,8 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
 
   if (learningMode && sessionCards.length > 0) {
     const card = sessionCards[currentIdx];
+    const options = parseOptions(card.example);
+
     return (
       <div className="max-w-2xl mx-auto space-y-8 animate-fade-in">
         <div className="flex justify-between items-center bg-white dark:bg-slate-800 p-5 rounded-3xl border-[3px] border-black shadow-[5px_5px_0px_0px_rgba(0,0,0,1)]">
@@ -83,20 +91,44 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
         </div>
         <div className={`flashcard ${flipped ? 'flipped' : ''}`} onClick={() => setFlipped(!flipped)}>
             <div className="flashcard-inner">
-                <div className="flashcard-front bg-indigo-600 border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)]">
-                    <div className="text-2xl md:text-3xl font-black text-center text-white leading-relaxed px-8">{card.type === 'cloze' ? card.front.replace(/\[(.*?)\]/g, '[...]') : card.front}</div>
-                    <div className="mt-12 text-[10px] bg-white/20 px-4 py-2 rounded-full text-white font-black uppercase tracking-widest animate-pulse">لمس برای مشاهده پاسخ</div>
-                </div>
-                <div className="flashcard-back bg-white dark:bg-slate-800 border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)]">
-                    <div className="flex flex-col items-center justify-center h-full space-y-6">
-                      <div className="text-xl md:text-2xl font-black text-center px-8 leading-relaxed dark:text-white">
-                        {card.type === 'cloze' ? <div dangerouslySetInnerHTML={{ __html: card.front.replace(/\[(.*?)\]/g, '<span class="bg-indigo-600 text-white px-2 rounded-lg font-black">$1</span>') }} /> : card.back}
+                {/* روی کارت: سوال + گزینه‌ها */}
+                <div className="flashcard-front bg-indigo-600 border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)] flex flex-col items-center p-6 overflow-y-auto custom-scrollbar">
+                    <div className="text-xl md:text-2xl font-black text-center text-white leading-relaxed mb-8 w-full">
+                      {card.type === 'cloze' ? card.front.replace(/\[(.*?)\]/g, '[...]') : card.front}
+                    </div>
+                    
+                    {options && (
+                      <div className="grid grid-cols-1 gap-3 w-full max-w-md mt-auto">
+                        {options.map((opt, i) => (
+                          <div key={i} className="bg-white/10 border-2 border-white/30 p-3 rounded-xl text-white text-right flex items-center gap-3 flex-row-reverse">
+                            <span className="w-6 h-6 flex items-center justify-center bg-white text-indigo-600 rounded-lg font-black text-[10px]">{String.fromCharCode(65 + i)}</span>
+                            <span className="text-xs font-bold flex-1">{opt}</span>
+                          </div>
+                        ))}
                       </div>
-                      {card.example && (
-                        <div className="bg-slate-100 dark:bg-slate-900 p-4 rounded-2xl border-2 border-black max-w-[80%]">
-                            <p className="text-[11px] text-slate-500 font-bold text-center italic leading-relaxed">{card.example}</p>
+                    )}
+
+                    <div className="mt-8 text-[9px] bg-black/20 px-4 py-2 rounded-full text-white font-black uppercase tracking-widest animate-pulse border border-white/20">لمس برای مشاهده پاسخ</div>
+                </div>
+
+                {/* پشت کارت: فقط پاسخ صحیح */}
+                <div className="flashcard-back bg-white dark:bg-slate-800 border-[6px] border-black shadow-[15px_15px_0px_0px_rgba(0,0,0,1)]">
+                    <div className="flex flex-col items-center justify-center h-full space-y-8 p-6">
+                      <div className="w-16 h-16 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl border-[3px] border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
+                        <i className="fa-solid fa-check"></i>
+                      </div>
+                      
+                      <div className="text-center space-y-4">
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest italic">پاسخ صحیح:</p>
+                        <div className="text-2xl md:text-3xl font-black text-emerald-600 dark:text-emerald-400 px-8 leading-relaxed">
+                          {card.type === 'cloze' ? <div dangerouslySetInnerHTML={{ __html: card.front.replace(/\[(.*?)\]/g, '<span class="bg-indigo-600 text-white px-2 rounded-lg font-black">$1</span>') }} /> : card.back}
                         </div>
-                      )}
+                      </div>
+
+                      <div className="bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl border-2 border-black max-w-[90%] text-center">
+                          <p className="text-[10px] text-indigo-600 dark:text-indigo-400 font-black mb-1">دسته: {card.category}</p>
+                          <p className="text-[11px] text-slate-500 font-bold italic leading-relaxed">برای تکرار بعدی، نمره خود را انتخاب کنید.</p>
+                      </div>
                     </div>
                 </div>
             </div>
@@ -162,7 +194,7 @@ const FlashcardSystem: React.FC<Props> = ({ flashcards, setFlashcards, questions
                 </div>
               ))}
             </div>
-            <button onClick={() => { setFlashcards(prev => [...prev, ...questions.filter(q => selectedQuestionIds.includes(q.id)).map(q => ({ id: Date.now()+Math.random(), front: q.q, back: q.o[q.a], category: q.c, type: 'standard' as CardType, tags: [], createdAt: Date.now(), dueDate: new Date().toISOString().split('T')[0], interval: 0, easeFactor: 2.5, repetitions: 0, errorCount: 0, difficulty: q.difficulty }))]); setIsImporting(false); setSelectedQuestionIds([]); }} disabled={selectedQuestionIds.length === 0} className="w-full mt-8 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-xl border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:opacity-30">تایید و اضافه کردن</button>
+            <button onClick={() => { setFlashcards(prev => [...prev, ...questions.filter(q => selectedQuestionIds.includes(q.id)).map(q => ({ id: Date.now()+Math.random(), front: q.q, back: q.o[q.a], category: q.c, type: 'standard' as CardType, tags: [], createdAt: Date.now(), dueDate: new Date().toISOString().split('T')[0], interval: 0, easeFactor: 2.5, repetitions: 0, errorCount: 0, difficulty: q.difficulty, example: `گزینه‌ها: ${q.o.join(' | ')}` }))]); setIsImporting(false); setSelectedQuestionIds([]); }} disabled={selectedQuestionIds.length === 0} className="w-full mt-8 py-5 bg-indigo-600 text-white rounded-[2rem] font-black text-xl border-[4px] border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] disabled:opacity-30">تایید و اضافه کردن</button>
         </div>
       ) : (
         <>
